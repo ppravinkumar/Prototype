@@ -1,0 +1,136 @@
+.page {
+  padding: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.headerContent {
+  flex: 1;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #F5F5F6;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #16181D;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #2A2D35;
+}
+
+.table thead {
+  background: #1A1C22;
+  border-bottom: 1px solid #2A2D35;
+}
+
+.table th {
+  text-align: left;
+  padding: 14px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid #2A2D35;
+  transition: background-color 0.15s ease;
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background: #1A1C22;
+}
+
+.table td {
+  padding: 16px;
+  font-size: 14px;
+  color: #E5E7EB;
+}
+
+.nameLink {
+  color: #3B82F6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.nameLink:hover {
+  color: #60A5FA;
+  text-decoration: underline;
+}
+
+.progressCell {
+  min-width: 200px;
+}
+
+.progressContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progressBar {
+  flex: 1;
+  height: 8px;
+  background: #1D2128;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  background: #3B82F6;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.progressLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #9CA3AF;
+  min-width: 40px;
+  text-align: right;
+}
+
+.createButton {
+  padding: 10px 20px;
+  background: #3B82F6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.createButton:hover {
+  background: #2563EB;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.createButton:active {
+  transform: translateY(0);
+}
