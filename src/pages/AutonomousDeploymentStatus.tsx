@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 import styles from './AutonomousDeploymentStatus.module.css'
 
 interface ProgressBreakdown {
@@ -38,58 +40,6 @@ interface StatusData {
   groups: Group[]
 }
 
-const SAMPLE_STATUS_DATA: StatusData = {
-  id: "dep_002",
-  name: "Monthly App Patch",
-  overallStatus: "Yet to apply",
-  installedPct: 0,
-  latestGroup: { start: "2025-11-12T19:00:00Z", end: "2025-12-11T18:59:00Z" },
-  counts: { yetToApply: 300, inProgress: 0, installed: 0, failed: 0 },
-  groups: [
-    {
-      groupId: "g1",
-      start: "2025-11-12T19:00:00Z",
-      end: "2025-12-11T18:59:00Z",
-      status: "Yet to apply",
-      targets: 300,
-      progressBreakdown: { yetToApply: 300, inProgress: 0, installed: 0, failed: 0 },
-      installedPct: 0,
-      rings: [
-        { ringName: "Internal users", status: "Yet to apply", targets: 100, progressBreakdown: { yetToApply: 100, inProgress: 0, installed: 0, failed: 0 }, installedPct: 0, hint: "Waiting for boundary" },
-        { ringName: "Early adopters", status: "Yet to apply", targets: 120, progressBreakdown: { yetToApply: 120, inProgress: 0, installed: 0, failed: 0 }, installedPct: 0, hint: "Waiting for Internal users ≥ 60%" },
-        { ringName: "All Users", status: "Yet to apply", targets: 80, progressBreakdown: { yetToApply: 80, inProgress: 0, installed: 0, failed: 0 }, installedPct: 0, hint: "Waiting for Early adopters ≥ 80%" }
-      ]
-    },
-    {
-      groupId: "g0",
-      start: "2025-10-16T20:00:00Z",
-      end: "2025-11-12T18:59:00Z",
-      status: "In Progress",
-      targets: 300,
-      progressBreakdown: { yetToApply: 240, inProgress: 45, installed: 10, failed: 5 },
-      installedPct: 13,
-      rings: [
-        { ringName: "Internal users", status: "In Progress", targets: 100, progressBreakdown: { yetToApply: 30, inProgress: 8, installed: 62, failed: 0 }, installedPct: 62, hint: "" },
-        { ringName: "Early adopters", status: "Yet to apply", targets: 120, progressBreakdown: { yetToApply: 120, inProgress: 0, installed: 0, failed: 0 }, installedPct: 0, hint: "Waiting for Internal users ≥ 60%" },
-        { ringName: "All Users", status: "Yet to apply", targets: 80, progressBreakdown: { yetToApply: 80, inProgress: 0, installed: 0, failed: 0 }, installedPct: 0, hint: "Waiting for Early adopters ≥ 80%" }
-      ]
-    },
-    {
-      groupId: "g-1",
-      start: "2025-09-12T19:00:00Z",
-      end: "2025-10-16T19:59:00Z",
-      status: "Installed",
-      targets: 292,
-      progressBreakdown: { yetToApply: 0, inProgress: 0, installed: 292, failed: 0 },
-      installedPct: 100,
-      rings: [
-        { ringName: "Internal users", status: "Installed", targets: 100, progressBreakdown: { yetToApply: 0, inProgress: 0, installed: 100, failed: 0 }, installedPct: 100, hint: "" },
-        { ringName: "Early adopters", status: "Installed", targets: 120, progressBreakdown: { yetToApply: 0, inProgress: 0, installed: 120, failed: 0 }, installedPct: 100, hint: "" },
-        { ringName: "All Users", status: "Installed", targets: 72, progressBreakdown: { yetToApply: 0, inProgress: 0, installed: 72, failed: 0 }, installedPct: 100, hint: "" }
-      ]
-    }
-  ]
-}
 
 function formatDateTime(dateStr: string): string {
   const date = new Date(dateStr)
@@ -163,15 +113,135 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function AutonomousDeploymentStatus() {
+  const { id } = useParams<{ id: string }>()
   const [expandedGroups, setExpandedGroups] = useState<string[]>([])
+  const [data, setData] = useState<StatusData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const data = SAMPLE_STATUS_DATA
+  useEffect(() => {
+    if (id) {
+      fetchDeploymentStatus(id)
+    }
+  }, [id])
+
+  const fetchDeploymentStatus = async (deploymentId: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data: deployment, error: depError } = await supabase
+        .from('autonomous_deployments')
+        .select('*')
+        .eq('id', deploymentId)
+        .maybeSingle()
+
+      if (depError) throw depError
+      if (!deployment) throw new Error('Deployment not found')
+
+      const { data: groups, error: groupsError } = await supabase
+        .from('autonomous_deployment_groups')
+        .select('*')
+        .eq('deployment_id', deploymentId)
+        .order('start_date', { ascending: false })
+
+      if (groupsError) throw groupsError
+
+      const groupIds = (groups || []).map(g => g.id)
+      const { data: rings, error: ringsError } = await supabase
+        .from('autonomous_deployment_group_rings')
+        .select('*')
+        .in('group_id', groupIds)
+
+      if (ringsError) throw ringsError
+
+      const ringsByGroup = (rings || []).reduce((acc: Record<string, any[]>, ring: any) => {
+        if (!acc[ring.group_id]) acc[ring.group_id] = []
+        acc[ring.group_id].push(ring)
+        return acc
+      }, {} as Record<string, any[]>)
+
+      const latestGroup = groups && groups.length > 0 ? groups[0] : null
+      const overallCounts = (groups || []).reduce((acc: any, g: any) => ({
+        yetToApply: acc.yetToApply + g.yet_to_apply,
+        inProgress: acc.inProgress + g.in_progress,
+        installed: acc.installed + g.installed,
+        failed: acc.failed + g.failed
+      }), { yetToApply: 0, inProgress: 0, installed: 0, failed: 0 })
+
+      const formattedGroups: Group[] = (groups || []).map((g: any) => ({
+        groupId: g.group_id,
+        start: g.start_date,
+        end: g.end_date,
+        status: g.status,
+        targets: g.targets,
+        progressBreakdown: {
+          yetToApply: g.yet_to_apply,
+          inProgress: g.in_progress,
+          installed: g.installed,
+          failed: g.failed
+        },
+        installedPct: g.installed_pct,
+        rings: (ringsByGroup[g.id] || []).map((r: any) => ({
+          ringName: r.ring_name,
+          status: r.status,
+          targets: r.targets,
+          progressBreakdown: {
+            yetToApply: r.yet_to_apply,
+            inProgress: r.in_progress,
+            installed: r.installed,
+            failed: r.failed
+          },
+          installedPct: r.installed_pct,
+          hint: r.hint
+        }))
+      }))
+
+      setData({
+        id: deployment.id,
+        name: deployment.deployment_name,
+        overallStatus: deployment.overall_status,
+        installedPct: deployment.installed_pct,
+        latestGroup: latestGroup ? {
+          start: latestGroup.start_date,
+          end: latestGroup.end_date
+        } : { start: '', end: '' },
+        counts: overallCounts,
+        groups: formattedGroups
+      })
+    } catch (err) {
+      console.error('Error fetching deployment status:', err)
+      setError('Failed to load deployment status')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev =>
       prev.includes(groupId)
         ? prev.filter(id => id !== groupId)
         : [...prev, groupId]
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <div style={{ padding: '40px', textAlign: 'center', color: '#6B7280' }}>
+          Loading deployment status...
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div className={styles.page}>
+        <div style={{ padding: '40px', textAlign: 'center', color: '#EF4444' }}>
+          {error || 'Deployment not found'}
+        </div>
+      </div>
     )
   }
 
