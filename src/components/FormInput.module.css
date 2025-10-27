@@ -53,3 +53,9 @@
   font-size: 13px;
   color: #EF4444;
 }
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}

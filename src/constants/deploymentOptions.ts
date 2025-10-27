@@ -76,3 +76,10 @@ export const POST_REBOOT_OPTIONS: { value: RebootOption; label: string }[] = [
   { value: 'if_required', label: 'Perform Post Reboot if Required' },
   { value: 'always', label: 'Perform Post Reboot' }
 ]
+
+export type NotificationOption = 'show_notifications' | 'no_notifications'
+
+export const NOTIFICATION_OPTIONS: { value: NotificationOption; label: string }[] = [
+  { value: 'show_notifications', label: 'Show Notification' },
+  { value: 'no_notifications', label: 'Do Not Show Notifications' }
+]

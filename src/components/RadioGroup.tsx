@@ -13,11 +13,12 @@ interface RadioGroupProps {
   value: string
   onChange: (value: string) => void
   name: string
+  disabled?: boolean
 }
 
-function RadioGroup({ label, options, value, onChange, name }: RadioGroupProps) {
+function RadioGroup({ label, options, value, onChange, name, disabled = false }: RadioGroupProps) {
   return (
-    <div className={styles.radioGroup}>
+    <div className={`${styles.radioGroup} ${disabled ? styles.disabled : ''}`}>
       <label className={styles.label}>{label}</label>
       <div className={styles.options}>
         {options.map((option) => {
@@ -32,6 +33,7 @@ function RadioGroup({ label, options, value, onChange, name }: RadioGroupProps) 
                 checked={value === optionValue}
                 onChange={(e) => onChange(e.target.value)}
                 className={styles.radioInput}
+                disabled={disabled}
               />
               <span className={styles.radioLabel}>{optionLabel}</span>
             </label>

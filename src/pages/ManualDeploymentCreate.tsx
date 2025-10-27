@@ -8,7 +8,9 @@ import {
   TARGET_OPTIONS,
   PRE_REBOOT_OPTIONS,
   POST_REBOOT_OPTIONS,
-  RebootOption
+  NOTIFICATION_OPTIONS,
+  RebootOption,
+  NotificationOption
 } from '../constants/deploymentOptions'
 import { supabase } from '../lib/supabase'
 import styles from './ManualDeploymentCreate.module.css'
@@ -16,10 +18,12 @@ import styles from './ManualDeploymentCreate.module.css'
 interface FormData {
   deploymentName: string
   selectedPatches: string[]
+  isCustomised: boolean
   forceInstallDate: string
   forceInstallTime: string
   preRebootOption: RebootOption
   postRebootOption: RebootOption
+  notificationOption: NotificationOption
   selectedTargets: string[]
 }
 
@@ -37,10 +41,12 @@ function ManualDeploymentCreate() {
   const [formData, setFormData] = useState<FormData>({
     deploymentName: '',
     selectedPatches: [],
+    isCustomised: false,
     forceInstallDate: '',
     forceInstallTime: '',
     preRebootOption: 'no_reboot',
     postRebootOption: 'no_reboot',
+    notificationOption: 'show_notifications',
     selectedTargets: []
   })
 
@@ -80,10 +86,12 @@ function ManualDeploymentCreate() {
         .from('manual_deployments')
         .insert({
           deployment_name: formData.deploymentName,
-          force_install_date: formData.forceInstallDate || null,
-          force_install_time: formData.forceInstallTime || null,
-          pre_reboot_option: formData.preRebootOption,
-          post_reboot_option: formData.postRebootOption,
+          is_customised: formData.isCustomised,
+          force_install_date: formData.isCustomised && formData.forceInstallDate ? formData.forceInstallDate : null,
+          force_install_time: formData.isCustomised && formData.forceInstallTime ? formData.forceInstallTime : null,
+          pre_reboot_option: formData.isCustomised ? formData.preRebootOption : 'no_reboot',
+          post_reboot_option: formData.isCustomised ? formData.postRebootOption : 'no_reboot',
+          show_notifications: formData.isCustomised ? (formData.notificationOption === 'show_notifications') : true,
           status: 'pending'
         })
         .select()
@@ -165,12 +173,25 @@ function ManualDeploymentCreate() {
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>Optional Customisation</h3>
 
+          <div className={styles.checkboxContainer}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.isCustomised}
+                onChange={(e) => setFormData({ ...formData, isCustomised: e.target.checked })}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkboxText}>Enable Custom Settings</span>
+            </label>
+          </div>
+
           <div className={styles.dateTimeRow}>
             <FormInput
               label="Force Install After — Date"
               type="date"
               value={formData.forceInstallDate}
               onChange={(value) => setFormData({ ...formData, forceInstallDate: value })}
+              disabled={!formData.isCustomised}
             />
 
             <FormInput
@@ -178,6 +199,7 @@ function ManualDeploymentCreate() {
               type="time"
               value={formData.forceInstallTime}
               onChange={(value) => setFormData({ ...formData, forceInstallTime: value })}
+              disabled={!formData.isCustomised}
             />
           </div>
 
@@ -187,6 +209,7 @@ function ManualDeploymentCreate() {
             options={PRE_REBOOT_OPTIONS}
             value={formData.preRebootOption}
             onChange={(value) => setFormData({ ...formData, preRebootOption: value as RebootOption })}
+            disabled={!formData.isCustomised}
           />
 
           <RadioGroup
@@ -195,6 +218,16 @@ function ManualDeploymentCreate() {
             options={POST_REBOOT_OPTIONS}
             value={formData.postRebootOption}
             onChange={(value) => setFormData({ ...formData, postRebootOption: value as RebootOption })}
+            disabled={!formData.isCustomised}
+          />
+
+          <RadioGroup
+            label="Show Notification"
+            name="notification"
+            options={NOTIFICATION_OPTIONS}
+            value={formData.notificationOption}
+            onChange={(value) => setFormData({ ...formData, notificationOption: value as NotificationOption })}
+            disabled={!formData.isCustomised}
           />
         </div>
 
