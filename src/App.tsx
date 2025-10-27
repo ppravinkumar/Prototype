@@ -5,7 +5,8 @@ import ManualDeploymentCreate from './pages/ManualDeploymentCreate'
 import AutonomousDeploymentList from './pages/AutonomousDeploymentList'
 import AutonomousDeploymentCreate from './pages/AutonomousDeploymentCreate'
 import AutonomousDeploymentStatus from './pages/AutonomousDeploymentStatus'
-import Policy from './pages/Policy'
+import PolicyList from './pages/PolicyList'
+import PolicyDetail from './pages/PolicyDetail'
 
 function App() {
   return (
@@ -18,7 +19,8 @@ function App() {
           <Route path="/deployment/autonomous" element={<AutonomousDeploymentList />} />
           <Route path="/deployment/autonomous/create" element={<AutonomousDeploymentCreate />} />
           <Route path="/deployment/autonomous/:id" element={<AutonomousDeploymentStatus />} />
-          <Route path="/policy" element={<Policy />} />
+          <Route path="/policy" element={<PolicyList />} />
+          <Route path="/policy/:cgId" element={<PolicyDetail />} />
         </Routes>
       </Layout>
     </BrowserRouter>
