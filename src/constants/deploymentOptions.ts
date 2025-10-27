@@ -2,6 +2,7 @@ export interface PatchOption {
   id: string
   name: string
   label: string
+  isDDM?: boolean
 }
 
 export interface TargetOption {
@@ -49,6 +50,24 @@ export const PATCH_OPTIONS: PatchOption[] = [
     id: '600208',
     name: 'VSCODE-1.94.2',
     label: '600208 - VSCODE-1.94.2'
+  },
+  {
+    id: '600209',
+    name: 'macOS Tahoe 26.1 (CVE-2025-53729, CVE-2025-536748, CVE-2025-638236)',
+    label: '600209 - macOS Tahoe 26.1 (CVE-2025-53729, CVE-2025-536748, CVE-2025-638236)',
+    isDDM: true
+  },
+  {
+    id: '600210',
+    name: 'macOS Sequoia 15.7.9 (CVE-2025-53729, CVE-2025-536748, CVE-2025-638236)',
+    label: '600210 - macOS Sequoia 15.7.9 (CVE-2025-53729, CVE-2025-536748, CVE-2025-638236)',
+    isDDM: true
+  },
+  {
+    id: '600211',
+    name: 'macOS Sequoia 24.8.3 (CVE-2025-53729, CVE-2025-536748, CVE-2025-638236)',
+    label: '600211 - macOS Sequoia 24.8.3 (CVE-2025-53729, CVE-2025-536748, CVE-2025-638236)',
+    isDDM: true
   }
 ]
 
@@ -83,3 +102,5 @@ export const NOTIFICATION_OPTIONS: { value: NotificationOption; label: string }[
   { value: 'show_notifications', label: 'Show Notification' },
   { value: 'no_notifications', label: 'Do Not Show Notifications' }
 ]
+
+export const DDM_PATCH_IDS = ['600209', '600210', '600211']

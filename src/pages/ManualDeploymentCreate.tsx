@@ -9,6 +9,7 @@ import {
   PRE_REBOOT_OPTIONS,
   POST_REBOOT_OPTIONS,
   NOTIFICATION_OPTIONS,
+  DDM_PATCH_IDS,
   RebootOption,
   NotificationOption
 } from '../constants/deploymentOptions'
@@ -25,12 +26,16 @@ interface FormData {
   postRebootOption: RebootOption
   notificationOption: NotificationOption
   selectedTargets: string[]
+  ddmForceInstallDate: string
+  ddmForceInstallTime: string
 }
 
 interface FormErrors {
   deploymentName?: string
   selectedPatches?: string
   selectedTargets?: string
+  ddmForceInstallDate?: string
+  ddmForceInstallTime?: string
 }
 
 function ManualDeploymentCreate() {
@@ -47,10 +52,14 @@ function ManualDeploymentCreate() {
     preRebootOption: 'no_reboot',
     postRebootOption: 'no_reboot',
     notificationOption: 'show_notifications',
-    selectedTargets: []
+    selectedTargets: [],
+    ddmForceInstallDate: '',
+    ddmForceInstallTime: ''
   })
 
   const [errors, setErrors] = useState<FormErrors>({})
+
+  const hasDDMPatches = formData.selectedPatches.some(patchId => DDM_PATCH_IDS.includes(patchId))
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {}
@@ -65,6 +74,15 @@ function ManualDeploymentCreate() {
 
     if (formData.selectedTargets.length === 0) {
       newErrors.selectedTargets = 'At least one target group must be selected'
+    }
+
+    if (hasDDMPatches) {
+      if (!formData.ddmForceInstallDate) {
+        newErrors.ddmForceInstallDate = 'DDM Force Install Date is required when DDM patches are selected'
+      }
+      if (!formData.ddmForceInstallTime) {
+        newErrors.ddmForceInstallTime = 'DDM Force Install Time is required when DDM patches are selected'
+      }
     }
 
     setErrors(newErrors)
@@ -128,6 +146,18 @@ function ManualDeploymentCreate() {
 
       if (targetsError) throw targetsError
 
+      if (hasDDMPatches && formData.ddmForceInstallDate && formData.ddmForceInstallTime) {
+        const { error: ddmError } = await supabase
+          .from('deployment_ddm_customization')
+          .insert({
+            deployment_id: deployment.id,
+            ddm_force_install_date: formData.ddmForceInstallDate,
+            ddm_force_install_time: formData.ddmForceInstallTime
+          })
+
+        if (ddmError) throw ddmError
+      }
+
       navigate('/deployment/manual')
     } catch (error) {
       console.error('Error creating deployment:', error)
@@ -169,6 +199,35 @@ function ManualDeploymentCreate() {
             placeholder="Search patches..."
           />
         </div>
+
+        {hasDDMPatches && (
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>DDM Customisation</h3>
+            <p className={styles.sectionDescription}>
+              Configure force install settings for Apple DDM patches (macOS updates and upgrades).
+            </p>
+
+            <div className={styles.dateTimeRow}>
+              <FormInput
+                label="Force Install After — Date"
+                type="date"
+                value={formData.ddmForceInstallDate}
+                onChange={(value) => setFormData({ ...formData, ddmForceInstallDate: value })}
+                error={errors.ddmForceInstallDate}
+                required
+              />
+
+              <FormInput
+                label="Force Install After — Time"
+                type="time"
+                value={formData.ddmForceInstallTime}
+                onChange={(value) => setFormData({ ...formData, ddmForceInstallTime: value })}
+                error={errors.ddmForceInstallTime}
+                required
+              />
+            </div>
+          </div>
+        )}
 
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>Optional Customisation</h3>

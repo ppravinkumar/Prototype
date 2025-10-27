@@ -43,6 +43,13 @@
   margin-bottom: -8px;
 }
 
+.sectionDescription {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-top: -16px;
+}
+
 .checkboxContainer {
   padding: 16px;
   background-color: var(--surface-3);
