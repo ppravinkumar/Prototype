@@ -247,18 +247,15 @@ function ManualDeploymentCreate() {
 
           {formData.isCustomised && (
             <div className={styles.customizationFields}>
-              <div>
-                <h3 className={styles.sectionTitle}>Force Install Date</h3>
-                <label className={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={formData.forceInstallEnabled}
-                    onChange={(e) => setFormData({ ...formData, forceInstallEnabled: e.target.checked })}
-                    className={styles.checkbox}
-                  />
-                  <span className={styles.checkboxText}>Force Install Date</span>
-                </label>
-              </div>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={formData.forceInstallEnabled}
+                  onChange={(e) => setFormData({ ...formData, forceInstallEnabled: e.target.checked })}
+                  className={styles.checkbox}
+                />
+                <span className={styles.checkboxText}>Enable Force Install</span>
+              </label>
 
               <div className={styles.dateTimeRow}>
                 <FormInput
