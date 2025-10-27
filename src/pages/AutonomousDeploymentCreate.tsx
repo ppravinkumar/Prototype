@@ -424,94 +424,111 @@ function AutonomousDeploymentCreate() {
           {errors.targetOverlap && <div className={styles.errorText}>{errors.targetOverlap}</div>}
 
           <div className={styles.ringsContainer}>
-            <div className={styles.ringCard}>
-              <h4 className={styles.ringHeader}>Ring 1 — Internal users</h4>
-              <MultiSelect
-                label="Targets"
-                options={TARGET_OPTIONS}
-                value={formData.ring1.targets}
-                onChange={(value) => setFormData({ ...formData, ring1: { ...formData.ring1, targets: value } })}
-                error={errors.ring1Targets}
-                required
-                placeholder="Search targets..."
-              />
-              <FormInput
-                label="Pass criteria % (Installed)"
-                type="number"
-                value={formData.ring1.passCriteria?.toString() || ''}
-                onChange={(value) => setFormData({ ...formData, ring1: { ...formData.ring1, passCriteria: parseInt(value) || undefined } })}
-                error={errors.ring1Pass}
-                required
-                placeholder="60"
-              />
-              <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
-                When this ring reaches the pass % Installed, the next ring begins.
-              </p>
-              <FormInput
-                label="Wait days for % calculation"
-                type="number"
-                value={formData.ring1.waitDays?.toString() || ''}
-                onChange={(value) => setFormData({ ...formData, ring1: { ...formData.ring1, waitDays: parseInt(value) || undefined } })}
-                error={errors.ring1Wait}
-                required
-                placeholder="0"
-              />
-              <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
-                We begin evaluating this ring's Installed % N days after it starts. After that, the % counts only devices targeted for at least N days. Once passed, it stays passed (latched).
-              </p>
-              <div className={styles.ringArrow}>→</div>
+            <div className={styles.ringWrapper}>
+              <div className={`${styles.ringCard} ${styles.ringCardLevel1}`}>
+                <h4 className={styles.ringHeader}>Ring 1 — Internal users</h4>
+                <MultiSelect
+                  label="Targets"
+                  options={TARGET_OPTIONS}
+                  value={formData.ring1.targets}
+                  onChange={(value) => setFormData({ ...formData, ring1: { ...formData.ring1, targets: value } })}
+                  error={errors.ring1Targets}
+                  required
+                  placeholder="Search targets..."
+                />
+                <FormInput
+                  label="Pass criteria % (Installed)"
+                  type="number"
+                  value={formData.ring1.passCriteria?.toString() || ''}
+                  onChange={(value) => setFormData({ ...formData, ring1: { ...formData.ring1, passCriteria: parseInt(value) || undefined } })}
+                  error={errors.ring1Pass}
+                  required
+                  placeholder="60"
+                />
+                <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
+                  When this ring reaches the pass % Installed, the next ring begins.
+                </p>
+                <FormInput
+                  label="Wait days for % calculation"
+                  type="number"
+                  value={formData.ring1.waitDays?.toString() || ''}
+                  onChange={(value) => setFormData({ ...formData, ring1: { ...formData.ring1, waitDays: parseInt(value) || undefined } })}
+                  error={errors.ring1Wait}
+                  required
+                  placeholder="0"
+                />
+                <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
+                  We begin evaluating this ring's Installed % N days after it starts. After that, the % counts only devices targeted for at least N days. Once passed, it stays passed (latched).
+                </p>
+              </div>
             </div>
 
-            <div className={styles.ringCard}>
-              <h4 className={styles.ringHeader}>Ring 2 — Early adopters</h4>
-              <MultiSelect
-                label="Targets"
-                options={TARGET_OPTIONS}
-                value={formData.ring2.targets}
-                onChange={(value) => setFormData({ ...formData, ring2: { ...formData.ring2, targets: value } })}
-                error={errors.ring2Targets}
-                required
-                placeholder="Search targets..."
-              />
-              <FormInput
-                label="Pass criteria % (Installed)"
-                type="number"
-                value={formData.ring2.passCriteria?.toString() || ''}
-                onChange={(value) => setFormData({ ...formData, ring2: { ...formData.ring2, passCriteria: parseInt(value) || undefined } })}
-                error={errors.ring2Pass}
-                required
-                placeholder="80"
-              />
-              <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
-                Opens when Internal users passes. When this ring reaches the pass %, the next ring begins.
-              </p>
-              <FormInput
-                label="Wait days for % calculation"
-                type="number"
-                value={formData.ring2.waitDays?.toString() || ''}
-                onChange={(value) => setFormData({ ...formData, ring2: { ...formData.ring2, waitDays: parseInt(value) || undefined } })}
-                error={errors.ring2Wait}
-                required
-                placeholder="0"
-              />
-              <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
-                Same evaluation rule: gate at N days and include only devices targeted for at least N days; latched once passed.
-              </p>
-              <div className={styles.ringArrow}>→</div>
+            <div className={styles.ringWrapper}>
+              <div className={`${styles.ringConnector} ${styles.ringConnectorLevel2}`} aria-hidden="true">
+                <svg className={styles.ringConnectorSvg} viewBox="0 0 160 120" preserveAspectRatio="none">
+                  <path className={styles.ringConnectorPath} d="M40 0 C 40 48 44 64 64 80 L 132 80" />
+                  <path className={styles.ringConnectorTail} d="M40 80 V 120" />
+                  <polygon className={styles.ringConnectorArrowHead} points="132,80 116,72 116,88" />
+                </svg>
+              </div>
+              <div className={`${styles.ringCard} ${styles.ringCardLevel2}`}>
+                <h4 className={styles.ringHeader}>Ring 2 — Early adopters</h4>
+                <MultiSelect
+                  label="Targets"
+                  options={TARGET_OPTIONS}
+                  value={formData.ring2.targets}
+                  onChange={(value) => setFormData({ ...formData, ring2: { ...formData.ring2, targets: value } })}
+                  error={errors.ring2Targets}
+                  required
+                  placeholder="Search targets..."
+                />
+                <FormInput
+                  label="Pass criteria % (Installed)"
+                  type="number"
+                  value={formData.ring2.passCriteria?.toString() || ''}
+                  onChange={(value) => setFormData({ ...formData, ring2: { ...formData.ring2, passCriteria: parseInt(value) || undefined } })}
+                  error={errors.ring2Pass}
+                  required
+                  placeholder="80"
+                />
+                <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
+                  Opens when Internal users passes. When this ring reaches the pass %, the next ring begins.
+                </p>
+                <FormInput
+                  label="Wait days for % calculation"
+                  type="number"
+                  value={formData.ring2.waitDays?.toString() || ''}
+                  onChange={(value) => setFormData({ ...formData, ring2: { ...formData.ring2, waitDays: parseInt(value) || undefined } })}
+                  error={errors.ring2Wait}
+                  required
+                  placeholder="0"
+                />
+                <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
+                  Same evaluation rule: gate at N days and include only devices targeted for at least N days; latched once passed.
+                </p>
+              </div>
             </div>
 
-            <div className={styles.ringCard}>
-              <h4 className={styles.ringHeader}>Ring 3 — All Users</h4>
-              <MultiSelect
-                label="Targets"
-                options={TARGET_OPTIONS}
-                value={formData.ring3.targets}
-                onChange={(value) => setFormData({ ...formData, ring3: { ...formData.ring3, targets: value } })}
-                error={errors.ring3Targets}
-                required
-                placeholder="Search targets..."
-              />
-              <p className={styles.ringNote}>Opens when Early adopters passes.</p>
+            <div className={styles.ringWrapper}>
+              <div className={`${styles.ringConnector} ${styles.ringConnectorLevel3}`} aria-hidden="true">
+                <svg className={styles.ringConnectorSvg} viewBox="0 0 320 120" preserveAspectRatio="none">
+                  <path className={styles.ringConnectorPath} d="M40 0 C 40 48 44 64 64 80 L 300 80" />
+                  <polygon className={styles.ringConnectorArrowHead} points="300,80 284,72 284,88" />
+                </svg>
+              </div>
+              <div className={`${styles.ringCard} ${styles.ringCardLevel3}`}>
+                <h4 className={styles.ringHeader}>Ring 3 — All Users</h4>
+                <MultiSelect
+                  label="Targets"
+                  options={TARGET_OPTIONS}
+                  value={formData.ring3.targets}
+                  onChange={(value) => setFormData({ ...formData, ring3: { ...formData.ring3, targets: value } })}
+                  error={errors.ring3Targets}
+                  required
+                  placeholder="Search targets..."
+                />
+                <p className={styles.ringNote}>Opens when Early adopters passes.</p>
+              </div>
             </div>
           </div>
         </div>

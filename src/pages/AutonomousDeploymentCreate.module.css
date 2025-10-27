@@ -171,21 +171,77 @@
 
 .ringsContainer {
   display: flex;
-  gap: 16px;
-  align-items: stretch;
+  flex-direction: column;
+  gap: 56px;
+}
+
+.ringWrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
   position: relative;
+}
+
+.ringConnector {
+  position: relative;
+  height: 120px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.ringConnectorLevel2 {
+  width: 160px;
+}
+
+.ringConnectorLevel3 {
+  width: 320px;
 }
 
 .ringCard {
   flex: 1;
   background: #1A1C22;
   border: 1px solid #2A2D35;
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: 12px;
+  padding: 24px;
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.ringCardLevel1 {
+  background: linear-gradient(135deg, #2e1b44, #241434);
+  border-color: #3a2d48;
+}
+
+.ringCardLevel2 {
+  background: linear-gradient(135deg, #183a32, #102c24);
+  border-color: #274134;
+}
+
+.ringCardLevel3 {
+  background: linear-gradient(135deg, #1b2640, #141d2f);
+  border-color: #203147;
+}
+
+.ringConnectorSvg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ringConnectorPath,
+.ringConnectorTail {
+  fill: none;
+  stroke: #4a5568;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ringConnectorArrowHead {
+  fill: #4a5568;
 }
 
 .ringHeader {
@@ -193,17 +249,6 @@
   font-weight: 600;
   color: #F5F5F6;
   margin: 0 0 4px 0;
-}
-
-.ringArrow {
-  position: absolute;
-  right: -24px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #3B82F6;
-  font-size: 24px;
-  font-weight: 300;
-  z-index: 1;
 }
 
 .ringNote {
@@ -280,12 +325,14 @@
 @media (max-width: 900px) {
   .ringsContainer {
     flex-direction: column;
+    gap: 32px;
   }
 
-  .ringArrow {
-    right: 50%;
-    top: auto;
-    bottom: -24px;
-    transform: translateX(50%) rotate(90deg);
+  .ringWrapper {
+    gap: 16px;
+  }
+
+  .ringConnector {
+    display: none;
   }
 }
