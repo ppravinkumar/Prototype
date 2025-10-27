@@ -107,9 +107,9 @@ function ManualDeploymentCreate() {
           is_customised: formData.isCustomised,
           force_install_date: formData.isCustomised && formData.forceInstallDate ? formData.forceInstallDate : null,
           force_install_time: formData.isCustomised && formData.forceInstallTime ? formData.forceInstallTime : null,
-          pre_reboot_option: formData.preRebootOption,
-          post_reboot_option: formData.postRebootOption,
-          show_notifications: formData.notificationOption === 'show_notifications',
+          pre_reboot_option: formData.isCustomised ? formData.preRebootOption : 'no_reboot',
+          post_reboot_option: formData.isCustomised ? formData.postRebootOption : 'no_reboot',
+          show_notifications: formData.isCustomised ? (formData.notificationOption === 'show_notifications') : true,
           status: 'pending'
         })
         .select()
@@ -244,6 +244,7 @@ function ManualDeploymentCreate() {
 
           {formData.isCustomised && (
             <div className={styles.customizationFields}>
+              <h3 className={styles.sectionTitle}>Force Install Date</h3>
               <div className={styles.dateTimeRow}>
                 <FormInput
                   label="Force Install Date"
@@ -259,32 +260,32 @@ function ManualDeploymentCreate() {
                   onChange={(value) => setFormData({ ...formData, forceInstallTime: value })}
                 />
               </div>
+
+              <RadioGroup
+                label="Pre Reboot"
+                name="preReboot"
+                options={PRE_REBOOT_OPTIONS}
+                value={formData.preRebootOption}
+                onChange={(value) => setFormData({ ...formData, preRebootOption: value as RebootOption })}
+              />
+
+              <RadioGroup
+                label="Post Reboot"
+                name="postReboot"
+                options={POST_REBOOT_OPTIONS}
+                value={formData.postRebootOption}
+                onChange={(value) => setFormData({ ...formData, postRebootOption: value as RebootOption })}
+              />
+
+              <RadioGroup
+                label="Show Notification"
+                name="notification"
+                options={NOTIFICATION_OPTIONS}
+                value={formData.notificationOption}
+                onChange={(value) => setFormData({ ...formData, notificationOption: value as NotificationOption })}
+              />
             </div>
           )}
-
-          <RadioGroup
-            label="Pre Reboot"
-            name="preReboot"
-            options={PRE_REBOOT_OPTIONS}
-            value={formData.preRebootOption}
-            onChange={(value) => setFormData({ ...formData, preRebootOption: value as RebootOption })}
-          />
-
-          <RadioGroup
-            label="Post Reboot"
-            name="postReboot"
-            options={POST_REBOOT_OPTIONS}
-            value={formData.postRebootOption}
-            onChange={(value) => setFormData({ ...formData, postRebootOption: value as RebootOption })}
-          />
-
-          <RadioGroup
-            label="Show Notification"
-            name="notification"
-            options={NOTIFICATION_OPTIONS}
-            value={formData.notificationOption}
-            onChange={(value) => setFormData({ ...formData, notificationOption: value as NotificationOption })}
-          />
         </div>
 
         <div className={styles.section}>
