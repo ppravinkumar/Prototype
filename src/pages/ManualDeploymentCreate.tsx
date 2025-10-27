@@ -20,6 +20,7 @@ interface FormData {
   deploymentName: string
   selectedPatches: string[]
   isCustomised: boolean
+  forceInstallEnabled: boolean
   forceInstallDate: string
   forceInstallTime: string
   preRebootOption: RebootOption
@@ -47,6 +48,7 @@ function ManualDeploymentCreate() {
     deploymentName: '',
     selectedPatches: [],
     isCustomised: false,
+    forceInstallEnabled: true,
     forceInstallDate: '',
     forceInstallTime: '',
     preRebootOption: 'no_reboot',
@@ -105,8 +107,9 @@ function ManualDeploymentCreate() {
         .insert({
           deployment_name: formData.deploymentName,
           is_customised: formData.isCustomised,
-          force_install_date: formData.isCustomised && formData.forceInstallDate ? formData.forceInstallDate : null,
-          force_install_time: formData.isCustomised && formData.forceInstallTime ? formData.forceInstallTime : null,
+          force_install_enabled: formData.isCustomised ? formData.forceInstallEnabled : true,
+          force_install_date: formData.isCustomised && formData.forceInstallEnabled && formData.forceInstallDate ? formData.forceInstallDate : null,
+          force_install_time: formData.isCustomised && formData.forceInstallEnabled && formData.forceInstallTime ? formData.forceInstallTime : null,
           pre_reboot_option: formData.isCustomised ? formData.preRebootOption : 'no_reboot',
           post_reboot_option: formData.isCustomised ? formData.postRebootOption : 'no_reboot',
           show_notifications: formData.isCustomised ? (formData.notificationOption === 'show_notifications') : true,
@@ -244,13 +247,26 @@ function ManualDeploymentCreate() {
 
           {formData.isCustomised && (
             <div className={styles.customizationFields}>
-              <h3 className={styles.sectionTitle}>Force Install Date</h3>
+              <div>
+                <h3 className={styles.sectionTitle}>Force Install Date</h3>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={formData.forceInstallEnabled}
+                    onChange={(e) => setFormData({ ...formData, forceInstallEnabled: e.target.checked })}
+                    className={styles.checkbox}
+                  />
+                  <span className={styles.checkboxText}>Force Install Date</span>
+                </label>
+              </div>
+
               <div className={styles.dateTimeRow}>
                 <FormInput
                   label="Force Install Date"
                   type="date"
                   value={formData.forceInstallDate}
                   onChange={(value) => setFormData({ ...formData, forceInstallDate: value })}
+                  disabled={!formData.forceInstallEnabled}
                 />
 
                 <FormInput
@@ -258,6 +274,7 @@ function ManualDeploymentCreate() {
                   type="time"
                   value={formData.forceInstallTime}
                   onChange={(value) => setFormData({ ...formData, forceInstallTime: value })}
+                  disabled={!formData.forceInstallEnabled}
                 />
               </div>
 
