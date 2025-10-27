@@ -230,9 +230,7 @@ function ManualDeploymentCreate() {
         )}
 
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Optional Customisation</h3>
-
-          <div className={styles.checkboxContainer}>
+          <div className={styles.customizationHeader}>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
@@ -240,54 +238,54 @@ function ManualDeploymentCreate() {
                 onChange={(e) => setFormData({ ...formData, isCustomised: e.target.checked })}
                 className={styles.checkbox}
               />
-              <span className={styles.checkboxText}>Enable Custom Settings</span>
+              <span className={styles.checkboxText}>Enable Customization</span>
             </label>
           </div>
 
-          <div className={styles.dateTimeRow}>
-            <FormInput
-              label="Force Install After — Date"
-              type="date"
-              value={formData.forceInstallDate}
-              onChange={(value) => setFormData({ ...formData, forceInstallDate: value })}
-              disabled={!formData.isCustomised}
-            />
+          {formData.isCustomised && (
+            <div className={styles.customizationFields}>
+              <h3 className={styles.sectionTitle}>Force Install Date</h3>
+              <div className={styles.dateTimeRow}>
+                <FormInput
+                  label="Force Install Date"
+                  type="date"
+                  value={formData.forceInstallDate}
+                  onChange={(value) => setFormData({ ...formData, forceInstallDate: value })}
+                />
 
-            <FormInput
-              label="Force Install After — Time"
-              type="time"
-              value={formData.forceInstallTime}
-              onChange={(value) => setFormData({ ...formData, forceInstallTime: value })}
-              disabled={!formData.isCustomised}
-            />
-          </div>
+                <FormInput
+                  label="Force Install Time"
+                  type="time"
+                  value={formData.forceInstallTime}
+                  onChange={(value) => setFormData({ ...formData, forceInstallTime: value })}
+                />
+              </div>
 
-          <RadioGroup
-            label="Pre Reboot"
-            name="preReboot"
-            options={PRE_REBOOT_OPTIONS}
-            value={formData.preRebootOption}
-            onChange={(value) => setFormData({ ...formData, preRebootOption: value as RebootOption })}
-            disabled={!formData.isCustomised}
-          />
+              <RadioGroup
+                label="Pre Reboot"
+                name="preReboot"
+                options={PRE_REBOOT_OPTIONS}
+                value={formData.preRebootOption}
+                onChange={(value) => setFormData({ ...formData, preRebootOption: value as RebootOption })}
+              />
 
-          <RadioGroup
-            label="Post Reboot"
-            name="postReboot"
-            options={POST_REBOOT_OPTIONS}
-            value={formData.postRebootOption}
-            onChange={(value) => setFormData({ ...formData, postRebootOption: value as RebootOption })}
-            disabled={!formData.isCustomised}
-          />
+              <RadioGroup
+                label="Post Reboot"
+                name="postReboot"
+                options={POST_REBOOT_OPTIONS}
+                value={formData.postRebootOption}
+                onChange={(value) => setFormData({ ...formData, postRebootOption: value as RebootOption })}
+              />
 
-          <RadioGroup
-            label="Show Notification"
-            name="notification"
-            options={NOTIFICATION_OPTIONS}
-            value={formData.notificationOption}
-            onChange={(value) => setFormData({ ...formData, notificationOption: value as NotificationOption })}
-            disabled={!formData.isCustomised}
-          />
+              <RadioGroup
+                label="Show Notification"
+                name="notification"
+                options={NOTIFICATION_OPTIONS}
+                value={formData.notificationOption}
+                onChange={(value) => setFormData({ ...formData, notificationOption: value as NotificationOption })}
+              />
+            </div>
+          )}
         </div>
 
         <div className={styles.section}>
