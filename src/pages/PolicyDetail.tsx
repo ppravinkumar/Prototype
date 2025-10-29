@@ -301,7 +301,6 @@ function PolicyDetail() {
             </div>
 
             <div className={styles.boxFootnote}>
-              'Force Install After' anchor = when patch is available/approved. Manual deployments ignore Machine timing unless 'Respect Policy Windows' is enabled at deploy.
             </div>
           </div>
 
@@ -333,10 +332,6 @@ function PolicyDetail() {
                 onChange={(value) => updateMachineDDM({ ddmForceTime: value })}
                 required
               />
-            </div>
-
-            <div className={styles.boxFootnote}>
-              DDM supports force window only; reboot/retry/notifications are OS-managed.
             </div>
           </div>
         </div>

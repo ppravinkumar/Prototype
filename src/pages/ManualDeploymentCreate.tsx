@@ -259,7 +259,7 @@ function ManualDeploymentCreate() {
 
               <div className={styles.dateTimeRow}>
                 <FormInput
-                  label="Force Install Date"
+                  label="Force Install After — Date"
                   type="date"
                   value={formData.forceInstallDate}
                   onChange={(value) => setFormData({ ...formData, forceInstallDate: value })}
@@ -267,7 +267,7 @@ function ManualDeploymentCreate() {
                 />
 
                 <FormInput
-                  label="Force Install Time"
+                  label="Force Install After — Time"
                   type="time"
                   value={formData.forceInstallTime}
                   onChange={(value) => setFormData({ ...formData, forceInstallTime: value })}
