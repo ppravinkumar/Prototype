@@ -26,6 +26,8 @@ interface Ring {
   patches: number
   patchProgressBreakdown: PatchProgressBreakdown
   patchInstalledPct: number
+  startTime: string | null
+  endTime: string | null
   hint: string
 }
 
@@ -226,6 +228,8 @@ function AutonomousDeploymentStatus() {
                 failed: r.patch_failed || 0
               },
               patchInstalledPct: r.patch_installed_pct || 0,
+              startTime: r.start_time,
+              endTime: r.end_time,
               hint: r.hint
             }
           })
@@ -370,14 +374,16 @@ function AutonomousDeploymentStatus() {
                           <table className={styles.innerTable}>
                             <thead>
                               <tr>
-                                <th style={{ width: '150px' }}>RING</th>
-                                <th style={{ width: '120px' }}>STATUS</th>
-                                <th style={{ width: '90px' }}>TARGETS</th>
-                                <th style={{ width: '180px' }}>TARGET PROGRESS</th>
-                                <th style={{ width: '80px' }}>PATCHES</th>
-                                <th style={{ width: '180px' }}>PATCH PROGRESS</th>
-                                <th style={{ width: '100px' }}>INSTALLED %</th>
-                                <th style={{ width: '200px' }}>HINT</th>
+                                <th style={{ width: '140px' }}>RING</th>
+                                <th style={{ width: '110px' }}>STATUS</th>
+                                <th style={{ width: '80px' }}>TARGETS</th>
+                                <th style={{ width: '160px' }}>TARGET PROGRESS</th>
+                                <th style={{ width: '70px' }}>PATCHES</th>
+                                <th style={{ width: '160px' }}>PATCH PROGRESS</th>
+                                <th style={{ width: '90px' }}>INSTALLED %</th>
+                                <th style={{ width: '140px' }}>START TIME</th>
+                                <th style={{ width: '140px' }}>END TIME</th>
+                                <th style={{ width: '180px' }}>HINT</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -390,6 +396,8 @@ function AutonomousDeploymentStatus() {
                                   <td>{ring.patches}</td>
                                   <td><ProgressComposite breakdown={ring.patchProgressBreakdown} small /></td>
                                   <td>{ring.installedPct}%</td>
+                                  <td>{ring.startTime ? formatDateTime(ring.startTime) : '-'}</td>
+                                  <td>{ring.endTime ? formatDateTime(ring.endTime) : '-'}</td>
                                   <td><span className={styles.hintText}>{ring.hint}</span></td>
                                 </tr>
                               ))}
