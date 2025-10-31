@@ -302,7 +302,7 @@ function AutonomousDeploymentStatus() {
               <th style={{ width: '320px' }}>ROLLOUT (START → END)</th>
               <th style={{ width: '160px' }}>STATUS</th>
               <th style={{ width: '110px' }}>TARGETS</th>
-              <th style={{ width: '260px' }}>PROGRESS</th>
+              <th style={{ width: '260px' }}>TARGET PROGRESS</th>
               <th style={{ width: '120px' }}>INSTALLED %</th>
               <th style={{ width: '60px' }}>RINGS</th>
             </tr>
@@ -334,7 +334,7 @@ function AutonomousDeploymentStatus() {
                                 <th style={{ width: '180px' }}>RING</th>
                                 <th style={{ width: '140px' }}>STATUS</th>
                                 <th style={{ width: '110px' }}>TARGETS</th>
-                                <th style={{ width: '240px' }}>PROGRESS</th>
+                                <th style={{ width: '240px' }}>TARGET PROGRESS</th>
                                 <th style={{ width: '120px' }}>INSTALLED %</th>
                                 <th style={{ width: '260px' }}>HINT</th>
                               </tr>
