@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import FormInput from '../components/FormInput'
 import MultiSelect from '../components/MultiSelect'
@@ -68,6 +68,22 @@ function ManualDeploymentCreate() {
   })
 
   const [errors, setErrors] = useState<FormErrors>({})
+
+  // Autofill policy start date/time when switching to Follow Policy
+  useEffect(() => {
+    if (formData.customizationMode !== 'follow_policy') return
+
+    const now = new Date()
+    const pad = (n: number) => n.toString().padStart(2, '0')
+    const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+    const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`
+
+    setFormData((prev) => ({
+      ...prev,
+      policyStartDate: prev.policyStartDate || date,
+      policyStartTime: prev.policyStartTime || time
+    }))
+  }, [formData.customizationMode])
 
   const hasDDMPatches = formData.selectedPatches.some(patchId => DDM_PATCH_IDS.includes(patchId))
 
