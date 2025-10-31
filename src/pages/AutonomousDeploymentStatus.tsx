@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import ProgressBar from '../components/ProgressBar'
 import styles from './AutonomousDeploymentStatus.module.css'
 
 interface ProgressBreakdown {
@@ -68,45 +69,6 @@ function formatDateTime(dateStr: string): string {
   })
 }
 
-function ProgressComposite({ breakdown, small = false }: { breakdown: ProgressBreakdown; small?: boolean }) {
-  const total = breakdown.yetToApply + breakdown.inProgress + breakdown.installed + breakdown.failed
-
-  if (total === 0) return <div className={small ? styles.progressCompositeSmall : styles.progressComposite} />
-
-  const yetToApplyPct = (breakdown.yetToApply / total) * 100
-  const inProgressPct = (breakdown.inProgress / total) * 100
-  const installedPct = (breakdown.installed / total) * 100
-  const failedPct = (breakdown.failed / total) * 100
-
-  return (
-    <div className={small ? styles.progressCompositeSmall : styles.progressComposite}>
-      {yetToApplyPct > 0 && (
-        <div
-          className={styles.progressSegment}
-          style={{ width: `${yetToApplyPct}%`, backgroundColor: '#6B7280' }}
-        />
-      )}
-      {inProgressPct > 0 && (
-        <div
-          className={styles.progressSegment}
-          style={{ width: `${inProgressPct}%`, backgroundColor: '#3B82F6' }}
-        />
-      )}
-      {installedPct > 0 && (
-        <div
-          className={styles.progressSegment}
-          style={{ width: `${installedPct}%`, backgroundColor: '#22C55E' }}
-        />
-      )}
-      {failedPct > 0 && (
-        <div
-          className={styles.progressSegment}
-          style={{ width: `${failedPct}%`, backgroundColor: '#EF4444' }}
-        />
-      )}
-    </div>
-  )
-}
 
 function StatusBadge({ status }: { status: string }) {
   const getStatusClass = () => {
@@ -357,9 +319,9 @@ function AutonomousDeploymentStatus() {
                     <td>{formatDateTime(group.start)} → {formatDateTime(group.end)}</td>
                     <td><StatusBadge status={group.status} /></td>
                     <td>{group.targets}</td>
-                    <td><ProgressComposite breakdown={group.progressBreakdown} /></td>
+                    <td><ProgressBar breakdown={group.progressBreakdown} showLabels /></td>
                     <td>{group.patches}</td>
-                    <td><ProgressComposite breakdown={group.patchProgressBreakdown} /></td>
+                    <td><ProgressBar breakdown={group.patchProgressBreakdown} showLabels /></td>
                     <td>{group.installedPct}%</td>
                     <td>
                       <span className={`${styles.chevron} ${isExpanded ? styles.chevronExpanded : ''}`}>
@@ -392,9 +354,9 @@ function AutonomousDeploymentStatus() {
                                   <td>{ring.ringName}</td>
                                   <td><StatusBadge status={ring.status} /></td>
                                   <td>{ring.targets}</td>
-                                  <td><ProgressComposite breakdown={ring.progressBreakdown} small /></td>
+                                  <td><ProgressBar breakdown={ring.progressBreakdown} small showLabels /></td>
                                   <td>{ring.patches}</td>
-                                  <td><ProgressComposite breakdown={ring.patchProgressBreakdown} small /></td>
+                                  <td><ProgressBar breakdown={ring.patchProgressBreakdown} small showLabels /></td>
                                   <td>{ring.installedPct}%</td>
                                   <td>{ring.startTime ? formatDateTime(ring.startTime) : '-'}</td>
                                   <td>{ring.endTime ? formatDateTime(ring.endTime) : '-'}</td>
