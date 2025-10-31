@@ -257,7 +257,7 @@ function AutonomousDeploymentStatus() {
       <div className={styles.summaryCard}>
         <div className={styles.summaryGrid}>
           <div className={styles.summaryBlock}>
-            <div className={styles.summaryLabel}>Latest Group</div>
+            <div className={styles.summaryLabel}>Latest Rollout</div>
             <div className={styles.summaryValue}>
               {formatDateTime(data.latestGroup.start)} → {formatDateTime(data.latestGroup.end)}
             </div>
@@ -293,13 +293,13 @@ function AutonomousDeploymentStatus() {
 
       <div className={styles.tableCard}>
         <div className={styles.tableHeader}>
-          <h2 className={styles.tableTitle}>Groups</h2>
+          <h2 className={styles.tableTitle}>Rollouts</h2>
         </div>
 
         <table className={styles.table}>
           <thead>
             <tr>
-              <th style={{ width: '320px' }}>GROUP (START → END)</th>
+              <th style={{ width: '320px' }}>ROLLOUT (START → END)</th>
               <th style={{ width: '160px' }}>STATUS</th>
               <th style={{ width: '110px' }}>TARGETS</th>
               <th style={{ width: '260px' }}>PROGRESS</th>
