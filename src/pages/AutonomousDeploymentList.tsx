@@ -7,6 +7,7 @@ interface Deployment {
   id: string
   name: string
   progressPct: number
+  autonomousStatus: string | null
   createdBy: string
 }
 
@@ -27,7 +28,7 @@ function AutonomousDeploymentList() {
 
       const { data, error: fetchError } = await supabase
         .from('autonomous_deployments')
-        .select('id, deployment_name, installed_pct, created_by')
+        .select('id, deployment_name, installed_pct, autonomous_status, created_by')
         .order('created_at', { ascending: false })
 
       if (fetchError) throw fetchError
@@ -36,6 +37,7 @@ function AutonomousDeploymentList() {
         id: d.id,
         name: d.deployment_name,
         progressPct: d.installed_pct,
+        autonomousStatus: d.autonomous_status || null,
         createdBy: d.created_by
       }))
 

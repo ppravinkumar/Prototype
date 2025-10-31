@@ -21,6 +21,7 @@ interface PatchProgressBreakdown {
 interface Ring {
   ringName: string
   status: string
+  autonomousStatus: string | null
   targets: number
   progressBreakdown: ProgressBreakdown
   installedPct: number
@@ -37,6 +38,7 @@ interface Group {
   start: string
   end: string
   status: string
+  autonomousStatus: string | null
   targets: number
   progressBreakdown: ProgressBreakdown
   installedPct: number
@@ -50,6 +52,7 @@ interface StatusData {
   id: string
   name: string
   overallStatus: string
+  autonomousStatus: string | null
   installedPct: number
   latestGroup: { start: string; end: string }
   counts: ProgressBreakdown
@@ -153,6 +156,7 @@ function AutonomousDeploymentStatus() {
           start: g.start_date,
           end: g.end_date,
           status: g.status,
+          autonomousStatus: g.autonomous_status || null,
           targets: g.targets,
           progressBreakdown: {
             yetToApply: g.yet_to_apply,
@@ -174,6 +178,7 @@ function AutonomousDeploymentStatus() {
             return {
               ringName: r.ring_name,
               status: r.status,
+              autonomousStatus: r.autonomous_status || null,
               targets: r.targets,
               progressBreakdown: {
                 yetToApply: r.yet_to_apply,
@@ -202,6 +207,7 @@ function AutonomousDeploymentStatus() {
         id: deployment.id,
         name: deployment.deployment_name,
         overallStatus: deployment.overall_status,
+        autonomousStatus: deployment.autonomous_status || null,
         installedPct: deployment.installed_pct,
         latestGroup: latestGroup ? {
           start: latestGroup.start_date,
@@ -317,7 +323,7 @@ function AutonomousDeploymentStatus() {
                 <>
                   <tr key={group.groupId} onClick={() => toggleGroup(group.groupId)}>
                     <td>{formatDateTime(group.start)} → {formatDateTime(group.end)}</td>
-                    <td><StatusBadge status={group.status} /></td>
+                    <td><StatusBadge status={group.autonomousStatus || group.status} /></td>
                     <td>{group.targets}</td>
                     <td><ProgressBar breakdown={group.progressBreakdown} showLabels /></td>
                     <td>{group.patches}</td>
@@ -352,7 +358,7 @@ function AutonomousDeploymentStatus() {
                               {group.rings.map((ring, idx) => (
                                 <tr key={idx}>
                                   <td>{ring.ringName}</td>
-                                  <td><StatusBadge status={ring.status} /></td>
+                                  <td><StatusBadge status={ring.autonomousStatus || ring.status} /></td>
                                   <td>{ring.targets}</td>
                                   <td><ProgressBar breakdown={ring.progressBreakdown} small showLabels /></td>
                                   <td>{ring.patches}</td>
