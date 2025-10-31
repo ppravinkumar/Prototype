@@ -10,12 +10,22 @@ interface ProgressBreakdown {
   failed: number
 }
 
+interface PatchProgressBreakdown {
+  yetToApply: number
+  inProgress: number
+  installed: number
+  failed: number
+}
+
 interface Ring {
   ringName: string
   status: string
   targets: number
   progressBreakdown: ProgressBreakdown
   installedPct: number
+  patches: number
+  patchProgressBreakdown: PatchProgressBreakdown
+  patchInstalledPct: number
   hint: string
 }
 
@@ -27,6 +37,9 @@ interface Group {
   targets: number
   progressBreakdown: ProgressBreakdown
   installedPct: number
+  patches: number
+  patchProgressBreakdown: PatchProgressBreakdown
+  patchInstalledPct: number
   rings: Ring[]
 }
 
@@ -169,33 +182,55 @@ function AutonomousDeploymentStatus() {
         failed: acc.failed + g.failed
       }), { yetToApply: 0, inProgress: 0, installed: 0, failed: 0 })
 
-      const formattedGroups: Group[] = (groups || []).map((g: any) => ({
-        groupId: g.group_id,
-        start: g.start_date,
-        end: g.end_date,
-        status: g.status,
-        targets: g.targets,
-        progressBreakdown: {
-          yetToApply: g.yet_to_apply,
-          inProgress: g.in_progress,
-          installed: g.installed,
-          failed: g.failed
-        },
-        installedPct: g.installed_pct,
-        rings: (ringsByGroup[g.id] || []).map((r: any) => ({
-          ringName: r.ring_name,
-          status: r.status,
-          targets: r.targets,
+      const formattedGroups: Group[] = (groups || []).map((g: any) => {
+        const patches = Array.isArray(g.patches) ? g.patches : []
+        return {
+          groupId: g.group_id,
+          start: g.start_date,
+          end: g.end_date,
+          status: g.status,
+          targets: g.targets,
           progressBreakdown: {
-            yetToApply: r.yet_to_apply,
-            inProgress: r.in_progress,
-            installed: r.installed,
-            failed: r.failed
+            yetToApply: g.yet_to_apply,
+            inProgress: g.in_progress,
+            installed: g.installed,
+            failed: g.failed
           },
-          installedPct: r.installed_pct,
-          hint: r.hint
-        }))
-      }))
+          installedPct: g.installed_pct,
+          patches: patches.length,
+          patchProgressBreakdown: {
+            yetToApply: g.patch_yet_to_apply || 0,
+            inProgress: g.patch_in_progress || 0,
+            installed: g.patch_installed || 0,
+            failed: g.patch_failed || 0
+          },
+          patchInstalledPct: g.patch_installed_pct || 0,
+          rings: (ringsByGroup[g.id] || []).map((r: any) => {
+            const ringPatches = Array.isArray(r.patches) ? r.patches : []
+            return {
+              ringName: r.ring_name,
+              status: r.status,
+              targets: r.targets,
+              progressBreakdown: {
+                yetToApply: r.yet_to_apply,
+                inProgress: r.in_progress,
+                installed: r.installed,
+                failed: r.failed
+              },
+              installedPct: r.installed_pct,
+              patches: ringPatches.length,
+              patchProgressBreakdown: {
+                yetToApply: r.patch_yet_to_apply || 0,
+                inProgress: r.patch_in_progress || 0,
+                installed: r.patch_installed || 0,
+                failed: r.patch_failed || 0
+              },
+              patchInstalledPct: r.patch_installed_pct || 0,
+              hint: r.hint
+            }
+          })
+        }
+      })
 
       setData({
         id: deployment.id,
@@ -299,11 +334,13 @@ function AutonomousDeploymentStatus() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th style={{ width: '320px' }}>ROLLOUT (START → END)</th>
-              <th style={{ width: '160px' }}>STATUS</th>
-              <th style={{ width: '110px' }}>TARGETS</th>
-              <th style={{ width: '260px' }}>TARGET PROGRESS</th>
-              <th style={{ width: '120px' }}>INSTALLED %</th>
+              <th style={{ width: '280px' }}>ROLLOUT (START → END)</th>
+              <th style={{ width: '140px' }}>STATUS</th>
+              <th style={{ width: '90px' }}>TARGETS</th>
+              <th style={{ width: '200px' }}>TARGET PROGRESS</th>
+              <th style={{ width: '90px' }}>PATCHES</th>
+              <th style={{ width: '200px' }}>PATCH PROGRESS</th>
+              <th style={{ width: '100px' }}>INSTALLED %</th>
               <th style={{ width: '60px' }}>RINGS</th>
             </tr>
           </thead>
@@ -317,6 +354,8 @@ function AutonomousDeploymentStatus() {
                     <td><StatusBadge status={group.status} /></td>
                     <td>{group.targets}</td>
                     <td><ProgressComposite breakdown={group.progressBreakdown} /></td>
+                    <td>{group.patches}</td>
+                    <td><ProgressComposite breakdown={group.patchProgressBreakdown} /></td>
                     <td>{group.installedPct}%</td>
                     <td>
                       <span className={`${styles.chevron} ${isExpanded ? styles.chevronExpanded : ''}`}>
@@ -326,17 +365,19 @@ function AutonomousDeploymentStatus() {
                   </tr>
                   {isExpanded && (
                     <tr className={styles.expandedRow}>
-                      <td colSpan={6}>
+                      <td colSpan={8}>
                         <div className={styles.expandedContent}>
                           <table className={styles.innerTable}>
                             <thead>
                               <tr>
-                                <th style={{ width: '180px' }}>RING</th>
-                                <th style={{ width: '140px' }}>STATUS</th>
-                                <th style={{ width: '110px' }}>TARGETS</th>
-                                <th style={{ width: '240px' }}>TARGET PROGRESS</th>
-                                <th style={{ width: '120px' }}>INSTALLED %</th>
-                                <th style={{ width: '260px' }}>HINT</th>
+                                <th style={{ width: '150px' }}>RING</th>
+                                <th style={{ width: '120px' }}>STATUS</th>
+                                <th style={{ width: '90px' }}>TARGETS</th>
+                                <th style={{ width: '180px' }}>TARGET PROGRESS</th>
+                                <th style={{ width: '80px' }}>PATCHES</th>
+                                <th style={{ width: '180px' }}>PATCH PROGRESS</th>
+                                <th style={{ width: '100px' }}>INSTALLED %</th>
+                                <th style={{ width: '200px' }}>HINT</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -346,6 +387,8 @@ function AutonomousDeploymentStatus() {
                                   <td><StatusBadge status={ring.status} /></td>
                                   <td>{ring.targets}</td>
                                   <td><ProgressComposite breakdown={ring.progressBreakdown} small /></td>
+                                  <td>{ring.patches}</td>
+                                  <td><ProgressComposite breakdown={ring.patchProgressBreakdown} small /></td>
                                   <td>{ring.installedPct}%</td>
                                   <td><span className={styles.hintText}>{ring.hint}</span></td>
                                 </tr>
