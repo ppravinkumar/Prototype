@@ -252,38 +252,6 @@ function ManualDeploymentCreate() {
 
           {formData.customizationMode === 'enable_customisation' && (
             <div className={styles.customizationFields}>
-              <div className={styles.summarySection}>
-                <h4 className={styles.summaryTitle}>Current customisation Specified</h4>
-                <div className={styles.summaryContent}>
-                  <div className={styles.summaryItem}>
-                    <span className={styles.summaryLabel}>Force Install:</span>
-                    <span className={styles.summaryValue}>
-                      {formData.forceInstallEnabled ? 'Enabled' : 'Disabled'}
-                      {formData.forceInstallEnabled && formData.forceInstallDate && formData.forceInstallTime &&
-                        ` (${formData.forceInstallDate} at ${formData.forceInstallTime})`
-                      }
-                    </span>
-                  </div>
-                  <div className={styles.summaryItem}>
-                    <span className={styles.summaryLabel}>Pre Reboot:</span>
-                    <span className={styles.summaryValue}>
-                      {PRE_REBOOT_OPTIONS.find(o => o.value === formData.preRebootOption)?.label}
-                    </span>
-                  </div>
-                  <div className={styles.summaryItem}>
-                    <span className={styles.summaryLabel}>Post Reboot:</span>
-                    <span className={styles.summaryValue}>
-                      {POST_REBOOT_OPTIONS.find(o => o.value === formData.postRebootOption)?.label}
-                    </span>
-                  </div>
-                  <div className={styles.summaryItem}>
-                    <span className={styles.summaryLabel}>Notifications:</span>
-                    <span className={styles.summaryValue}>
-                      {NOTIFICATION_OPTIONS.find(o => o.value === formData.notificationOption)?.label}
-                    </span>
-                  </div>
-                </div>
-              </div>
 
               <label className={styles.checkboxLabel}>
                 <input
