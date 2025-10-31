@@ -252,58 +252,61 @@ function ManualDeploymentCreate() {
 
           {formData.customizationMode === 'enable_customisation' && (
             <div className={styles.customizationFields}>
+              <div className={styles.agentSection}>
+                <h4 className={styles.agentTitle}>Agent Customisation</h4>
 
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={formData.forceInstallEnabled}
-                  onChange={(e) => setFormData({ ...formData, forceInstallEnabled: e.target.checked })}
-                  className={styles.checkbox}
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={formData.forceInstallEnabled}
+                    onChange={(e) => setFormData({ ...formData, forceInstallEnabled: e.target.checked })}
+                    className={styles.checkbox}
+                  />
+                  <span className={styles.checkboxText}>Enable Force Install</span>
+                </label>
+
+                <div className={styles.dateTimeRow}>
+                  <FormInput
+                    label="Force Install After — Date"
+                    type="date"
+                    value={formData.forceInstallDate}
+                    onChange={(value) => setFormData({ ...formData, forceInstallDate: value })}
+                    disabled={!formData.forceInstallEnabled}
+                  />
+
+                  <FormInput
+                    label="Force Install After — Time"
+                    type="time"
+                    value={formData.forceInstallTime}
+                    onChange={(value) => setFormData({ ...formData, forceInstallTime: value })}
+                    disabled={!formData.forceInstallEnabled}
+                  />
+                </div>
+
+                <RadioGroup
+                  label="Pre Reboot"
+                  name="preReboot"
+                  options={PRE_REBOOT_OPTIONS}
+                  value={formData.preRebootOption}
+                  onChange={(value) => setFormData({ ...formData, preRebootOption: value as RebootOption })}
                 />
-                <span className={styles.checkboxText}>Enable Force Install</span>
-              </label>
 
-              <div className={styles.dateTimeRow}>
-                <FormInput
-                  label="Force Install After — Date"
-                  type="date"
-                  value={formData.forceInstallDate}
-                  onChange={(value) => setFormData({ ...formData, forceInstallDate: value })}
-                  disabled={!formData.forceInstallEnabled}
+                <RadioGroup
+                  label="Post Reboot"
+                  name="postReboot"
+                  options={POST_REBOOT_OPTIONS}
+                  value={formData.postRebootOption}
+                  onChange={(value) => setFormData({ ...formData, postRebootOption: value as RebootOption })}
                 />
 
-                <FormInput
-                  label="Force Install After — Time"
-                  type="time"
-                  value={formData.forceInstallTime}
-                  onChange={(value) => setFormData({ ...formData, forceInstallTime: value })}
-                  disabled={!formData.forceInstallEnabled}
+                <RadioGroup
+                  label="Show Notification"
+                  name="notification"
+                  options={NOTIFICATION_OPTIONS}
+                  value={formData.notificationOption}
+                  onChange={(value) => setFormData({ ...formData, notificationOption: value as NotificationOption })}
                 />
               </div>
-
-              <RadioGroup
-                label="Pre Reboot"
-                name="preReboot"
-                options={PRE_REBOOT_OPTIONS}
-                value={formData.preRebootOption}
-                onChange={(value) => setFormData({ ...formData, preRebootOption: value as RebootOption })}
-              />
-
-              <RadioGroup
-                label="Post Reboot"
-                name="postReboot"
-                options={POST_REBOOT_OPTIONS}
-                value={formData.postRebootOption}
-                onChange={(value) => setFormData({ ...formData, postRebootOption: value as RebootOption })}
-              />
-
-              <RadioGroup
-                label="Show Notification"
-                name="notification"
-                options={NOTIFICATION_OPTIONS}
-                value={formData.notificationOption}
-                onChange={(value) => setFormData({ ...formData, notificationOption: value as NotificationOption })}
-              />
 
               {hasDDMPatches && (
                 <div className={styles.ddmSection}>

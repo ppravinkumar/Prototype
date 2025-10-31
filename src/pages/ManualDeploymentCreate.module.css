@@ -82,6 +82,23 @@
   font-weight: 500;
 }
 
+.agentSection {
+  background-color: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.agentTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-strong);
+  margin: 0;
+}
+
 .ddmSection {
   background-color: var(--surface-3);
   border: 1px solid var(--border);
