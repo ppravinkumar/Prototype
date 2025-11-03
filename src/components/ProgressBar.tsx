@@ -64,14 +64,14 @@ function ProgressBar({ breakdown, small = false, showLabels = false }: ProgressB
     {
       count: breakdown.yetToApply,
       percentage: (breakdown.yetToApply / total) * 100,
-      color: '#6B7280',
+      color: '#F59E0B',
       label: 'Yet to Apply',
       key: 'yetToApply' as keyof ProgressBreakdown
     },
     {
       count: breakdown.inProgress,
       percentage: (breakdown.inProgress / total) * 100,
-      color: '#F59E0B',
+      color: '#3B82F6',
       label: 'In Progress',
       key: 'inProgress' as keyof ProgressBreakdown
     }
@@ -99,7 +99,7 @@ function ProgressBar({ breakdown, small = false, showLabels = false }: ProgressB
               <span
                 className={small ? styles.segmentLabelSmall : styles.segmentLabel}
                 style={{
-                  color: segment.key === 'installed' ? '#062f12' : '#FFFFFF'
+                  color: segment.key === 'installed' ? '#062f12' : segment.key === 'yetToApply' ? '#1F2937' : '#FFFFFF'
                 }}
               >
                 {segment.count}
