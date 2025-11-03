@@ -271,11 +271,6 @@ function AutonomousDeploymentStatus() {
           </div>
 
           <div className={styles.summaryBlock}>
-            <div className={styles.summaryLabel}>Installed</div>
-            <div className={styles.summaryValueLarge}>{data.installedPct}%</div>
-          </div>
-
-          <div className={styles.summaryBlock}>
             <div className={styles.metricsInline}>
               <div className={styles.metricItem}>
                 <div className={styles.metricLabel}>Yet to apply</div>
@@ -312,7 +307,6 @@ function AutonomousDeploymentStatus() {
               <th style={{ width: '200px' }}>TARGET PROGRESS</th>
               <th style={{ width: '90px' }}>PATCHES</th>
               <th style={{ width: '200px' }}>PATCH PROGRESS</th>
-              <th style={{ width: '100px' }}>INSTALLED %</th>
               <th style={{ width: '60px' }}>RINGS</th>
             </tr>
           </thead>
@@ -328,7 +322,6 @@ function AutonomousDeploymentStatus() {
                     <td><ProgressBar breakdown={group.progressBreakdown} showLabels /></td>
                     <td>{group.patches}</td>
                     <td><ProgressBar breakdown={group.patchProgressBreakdown} showLabels /></td>
-                    <td>{group.installedPct}%</td>
                     <td>
                       <span className={`${styles.chevron} ${isExpanded ? styles.chevronExpanded : ''}`}>
                         ›
@@ -337,7 +330,7 @@ function AutonomousDeploymentStatus() {
                   </tr>
                   {isExpanded && (
                     <tr className={styles.expandedRow}>
-                      <td colSpan={8}>
+                      <td colSpan={7}>
                         <div className={styles.expandedContent}>
                           <table className={styles.innerTable}>
                             <thead>
@@ -348,7 +341,6 @@ function AutonomousDeploymentStatus() {
                                 <th style={{ width: '160px' }}>TARGET PROGRESS</th>
                                 <th style={{ width: '70px' }}>PATCHES</th>
                                 <th style={{ width: '160px' }}>PATCH PROGRESS</th>
-                                <th style={{ width: '90px' }}>INSTALLED %</th>
                                 <th style={{ width: '140px' }}>START TIME</th>
                                 <th style={{ width: '140px' }}>END TIME</th>
                                 <th style={{ width: '180px' }}>HINT</th>
@@ -363,7 +355,6 @@ function AutonomousDeploymentStatus() {
                                   <td><ProgressBar breakdown={ring.progressBreakdown} small showLabels /></td>
                                   <td>{ring.patches}</td>
                                   <td><ProgressBar breakdown={ring.patchProgressBreakdown} small showLabels /></td>
-                                  <td>{ring.installedPct}%</td>
                                   <td>{ring.startTime ? formatDateTime(ring.startTime) : '-'}</td>
                                   <td>{ring.endTime ? formatDateTime(ring.endTime) : '-'}</td>
                                   <td><span className={styles.hintText}>{ring.hint}</span></td>
