@@ -132,6 +132,7 @@ function AutonomousDeploymentStatus() {
         .from('autonomous_deployment_group_rings')
         .select('*')
         .in('group_id', groupIds)
+        .order('created_at', { ascending: true })
 
       if (ringsError) throw ringsError
 
