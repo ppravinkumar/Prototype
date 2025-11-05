@@ -79,13 +79,37 @@
 }
 
 .progressCell {
-  min-width: 300px;
+  min-width: 200px;
 }
 
-.noData {
+.progressContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progressBar {
+  flex: 1;
+  height: 8px;
+  background: #1D2128;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  background: #3B82F6;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.progressLabel {
   font-size: 13px;
-  color: #6B7280;
-  font-style: italic;
+  font-weight: 500;
+  color: #9CA3AF;
+  min-width: 40px;
+  text-align: right;
 }
 
 .createButton {

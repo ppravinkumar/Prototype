@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import FormInput from '../components/FormInput'
 import MultiSelect from '../components/MultiSelect'
@@ -10,10 +10,8 @@ import {
   POST_REBOOT_OPTIONS,
   NOTIFICATION_OPTIONS,
   DDM_PATCH_IDS,
-  CUSTOMIZATION_MODE_OPTIONS,
   RebootOption,
-  NotificationOption,
-  CustomizationMode
+  NotificationOption
 } from '../constants/deploymentOptions'
 import { supabase } from '../lib/supabase'
 import styles from './ManualDeploymentCreate.module.css'
@@ -21,7 +19,7 @@ import styles from './ManualDeploymentCreate.module.css'
 interface FormData {
   deploymentName: string
   selectedPatches: string[]
-  customizationMode: CustomizationMode
+  isCustomised: boolean
   forceInstallEnabled: boolean
   forceInstallDate: string
   forceInstallTime: string
@@ -31,8 +29,6 @@ interface FormData {
   selectedTargets: string[]
   ddmForceInstallDate: string
   ddmForceInstallTime: string
-  policyStartDate: string
-  policyStartTime: string
 }
 
 interface FormErrors {
@@ -41,8 +37,6 @@ interface FormErrors {
   selectedTargets?: string
   ddmForceInstallDate?: string
   ddmForceInstallTime?: string
-  policyStartDate?: string
-  policyStartTime?: string
 }
 
 function ManualDeploymentCreate() {
@@ -53,7 +47,7 @@ function ManualDeploymentCreate() {
   const [formData, setFormData] = useState<FormData>({
     deploymentName: '',
     selectedPatches: [],
-    customizationMode: 'enable_customisation',
+    isCustomised: false,
     forceInstallEnabled: true,
     forceInstallDate: '',
     forceInstallTime: '',
@@ -62,28 +56,10 @@ function ManualDeploymentCreate() {
     notificationOption: 'show_notifications',
     selectedTargets: [],
     ddmForceInstallDate: '',
-    ddmForceInstallTime: '',
-    policyStartDate: '',
-    policyStartTime: ''
+    ddmForceInstallTime: ''
   })
 
   const [errors, setErrors] = useState<FormErrors>({})
-
-  // Autofill policy start date/time when switching to Follow Policy
-  useEffect(() => {
-    if (formData.customizationMode !== 'follow_policy') return
-
-    const now = new Date()
-    const pad = (n: number) => n.toString().padStart(2, '0')
-    const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-    const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`
-
-    setFormData((prev) => ({
-      ...prev,
-      policyStartDate: prev.policyStartDate || date,
-      policyStartTime: prev.policyStartTime || time
-    }))
-  }, [formData.customizationMode])
 
   const hasDDMPatches = formData.selectedPatches.some(patchId => DDM_PATCH_IDS.includes(patchId))
 
@@ -102,21 +78,12 @@ function ManualDeploymentCreate() {
       newErrors.selectedTargets = 'At least one target group must be selected'
     }
 
-    if (formData.customizationMode === 'enable_customisation' && hasDDMPatches) {
+    if (hasDDMPatches) {
       if (!formData.ddmForceInstallDate) {
         newErrors.ddmForceInstallDate = 'DDM Force Install Date is required when DDM patches are selected'
       }
       if (!formData.ddmForceInstallTime) {
         newErrors.ddmForceInstallTime = 'DDM Force Install Time is required when DDM patches are selected'
-      }
-    }
-
-    if (formData.customizationMode === 'follow_policy') {
-      if (!formData.policyStartDate) {
-        newErrors.policyStartDate = 'Policy start date is required'
-      }
-      if (!formData.policyStartTime) {
-        newErrors.policyStartTime = 'Policy start time is required'
       }
     }
 
@@ -135,22 +102,17 @@ function ManualDeploymentCreate() {
     setSubmitError(null)
 
     try {
-      const isCustomMode = formData.customizationMode === 'enable_customisation'
-
       const { data: deployment, error: deploymentError } = await supabase
         .from('manual_deployments')
         .insert({
           deployment_name: formData.deploymentName,
-          customization_mode: formData.customizationMode,
-          is_customised: isCustomMode,
-          force_install_enabled: isCustomMode ? formData.forceInstallEnabled : true,
-          force_install_date: isCustomMode && formData.forceInstallEnabled && formData.forceInstallDate ? formData.forceInstallDate : null,
-          force_install_time: isCustomMode && formData.forceInstallEnabled && formData.forceInstallTime ? formData.forceInstallTime : null,
-          pre_reboot_option: isCustomMode ? formData.preRebootOption : 'no_reboot',
-          post_reboot_option: isCustomMode ? formData.postRebootOption : 'no_reboot',
-          show_notifications: isCustomMode ? (formData.notificationOption === 'show_notifications') : true,
-          policy_start_date: formData.customizationMode === 'follow_policy' && formData.policyStartDate ? formData.policyStartDate : null,
-          policy_start_time: formData.customizationMode === 'follow_policy' && formData.policyStartTime ? formData.policyStartTime : null,
+          is_customised: formData.isCustomised,
+          force_install_enabled: formData.isCustomised ? formData.forceInstallEnabled : true,
+          force_install_date: formData.isCustomised && formData.forceInstallEnabled && formData.forceInstallDate ? formData.forceInstallDate : null,
+          force_install_time: formData.isCustomised && formData.forceInstallEnabled && formData.forceInstallTime ? formData.forceInstallTime : null,
+          pre_reboot_option: formData.isCustomised ? formData.preRebootOption : 'no_reboot',
+          post_reboot_option: formData.isCustomised ? formData.postRebootOption : 'no_reboot',
+          show_notifications: formData.isCustomised ? (formData.notificationOption === 'show_notifications') : true,
           status: 'pending'
         })
         .select()
@@ -187,7 +149,7 @@ function ManualDeploymentCreate() {
 
       if (targetsError) throw targetsError
 
-      if (formData.customizationMode === 'enable_customisation' && hasDDMPatches && formData.ddmForceInstallDate && formData.ddmForceInstallTime) {
+      if (hasDDMPatches && formData.ddmForceInstallDate && formData.ddmForceInstallTime) {
         const { error: ddmError } = await supabase
           .from('deployment_ddm_customization')
           .insert({
@@ -241,125 +203,101 @@ function ManualDeploymentCreate() {
           />
         </div>
 
-        <div className={styles.section}>
-          <RadioGroup
-            label="Deployment Configuration"
-            name="customizationMode"
-            options={CUSTOMIZATION_MODE_OPTIONS}
-            value={formData.customizationMode}
-            onChange={(value) => setFormData({ ...formData, customizationMode: value as CustomizationMode })}
-          />
+        {hasDDMPatches && (
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>DDM Customisation</h3>
+            <p className={styles.sectionDescription}>
+              Configure force install settings for Apple DDM patches (macOS updates and upgrades).
+            </p>
 
-          {formData.customizationMode === 'enable_customisation' && (
-            <div className={styles.customizationFields}>
-              <div className={styles.agentSection}>
-                <h4 className={styles.agentTitle}>Agent Customisation</h4>
+            <div className={styles.dateTimeRow}>
+              <FormInput
+                label="Force Install After — Date"
+                type="date"
+                value={formData.ddmForceInstallDate}
+                onChange={(value) => setFormData({ ...formData, ddmForceInstallDate: value })}
+                error={errors.ddmForceInstallDate}
+                required
+              />
 
-                <label className={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={formData.forceInstallEnabled}
-                    onChange={(e) => setFormData({ ...formData, forceInstallEnabled: e.target.checked })}
-                    className={styles.checkbox}
-                  />
-                  <span className={styles.checkboxText}>Enable Force Install</span>
-                </label>
-
-                <div className={styles.dateTimeRow}>
-                  <FormInput
-                    label="Force Install After — Date"
-                    type="date"
-                    value={formData.forceInstallDate}
-                    onChange={(value) => setFormData({ ...formData, forceInstallDate: value })}
-                    disabled={!formData.forceInstallEnabled}
-                  />
-
-                  <FormInput
-                    label="Force Install After — Time"
-                    type="time"
-                    value={formData.forceInstallTime}
-                    onChange={(value) => setFormData({ ...formData, forceInstallTime: value })}
-                    disabled={!formData.forceInstallEnabled}
-                  />
-                </div>
-
-                <RadioGroup
-                  label="Pre Reboot"
-                  name="preReboot"
-                  options={PRE_REBOOT_OPTIONS}
-                  value={formData.preRebootOption}
-                  onChange={(value) => setFormData({ ...formData, preRebootOption: value as RebootOption })}
-                />
-
-                <RadioGroup
-                  label="Post Reboot"
-                  name="postReboot"
-                  options={POST_REBOOT_OPTIONS}
-                  value={formData.postRebootOption}
-                  onChange={(value) => setFormData({ ...formData, postRebootOption: value as RebootOption })}
-                />
-
-                <RadioGroup
-                  label="Show Notification"
-                  name="notification"
-                  options={NOTIFICATION_OPTIONS}
-                  value={formData.notificationOption}
-                  onChange={(value) => setFormData({ ...formData, notificationOption: value as NotificationOption })}
-                />
-              </div>
-
-              {hasDDMPatches && (
-                <div className={styles.ddmSection}>
-                  <h4 className={styles.ddmTitle}>DDM Customisation</h4>
-                  <p className={styles.ddmDescription}>
-                    Configure force install settings for Apple DDM patches (macOS updates and upgrades).
-                  </p>
-
-                  <div className={styles.dateTimeRow}>
-                    <FormInput
-                      label="Force Install After — Date"
-                      type="date"
-                      value={formData.ddmForceInstallDate}
-                      onChange={(value) => setFormData({ ...formData, ddmForceInstallDate: value })}
-                      error={errors.ddmForceInstallDate}
-                      required
-                    />
-
-                    <FormInput
-                      label="Force Install After — Time"
-                      type="time"
-                      value={formData.ddmForceInstallTime}
-                      onChange={(value) => setFormData({ ...formData, ddmForceInstallTime: value })}
-                      error={errors.ddmForceInstallTime}
-                      required
-                    />
-                  </div>
-                </div>
-              )}
+              <FormInput
+                label="Force Install After — Time"
+                type="time"
+                value={formData.ddmForceInstallTime}
+                onChange={(value) => setFormData({ ...formData, ddmForceInstallTime: value })}
+                error={errors.ddmForceInstallTime}
+                required
+              />
             </div>
-          )}
+          </div>
+        )}
 
-          {formData.customizationMode === 'follow_policy' && (
+        <div className={styles.section}>
+          <div className={styles.customizationHeader}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.isCustomised}
+                onChange={(e) => setFormData({ ...formData, isCustomised: e.target.checked })}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkboxText}>Enable Customization</span>
+            </label>
+          </div>
+
+          {formData.isCustomised && (
             <div className={styles.customizationFields}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={formData.forceInstallEnabled}
+                  onChange={(e) => setFormData({ ...formData, forceInstallEnabled: e.target.checked })}
+                  className={styles.checkbox}
+                />
+                <span className={styles.checkboxText}>Enable Force Install</span>
+              </label>
+
               <div className={styles.dateTimeRow}>
                 <FormInput
-                  label="Policy Start Date"
+                  label="Force Install After — Date"
                   type="date"
-                  value={formData.policyStartDate}
-                  onChange={(value) => setFormData({ ...formData, policyStartDate: value })}
-                  error={errors.policyStartDate}
-                  required
+                  value={formData.forceInstallDate}
+                  onChange={(value) => setFormData({ ...formData, forceInstallDate: value })}
+                  disabled={!formData.forceInstallEnabled}
                 />
 
                 <FormInput
-                  label="Policy Start Time"
+                  label="Force Install After — Time"
                   type="time"
-                  value={formData.policyStartTime}
-                  onChange={(value) => setFormData({ ...formData, policyStartTime: value })}
-                  error={errors.policyStartTime}
-                  required
+                  value={formData.forceInstallTime}
+                  onChange={(value) => setFormData({ ...formData, forceInstallTime: value })}
+                  disabled={!formData.forceInstallEnabled}
                 />
               </div>
+
+              <RadioGroup
+                label="Pre Reboot"
+                name="preReboot"
+                options={PRE_REBOOT_OPTIONS}
+                value={formData.preRebootOption}
+                onChange={(value) => setFormData({ ...formData, preRebootOption: value as RebootOption })}
+              />
+
+              <RadioGroup
+                label="Post Reboot"
+                name="postReboot"
+                options={POST_REBOOT_OPTIONS}
+                value={formData.postRebootOption}
+                onChange={(value) => setFormData({ ...formData, postRebootOption: value as RebootOption })}
+              />
+
+              <RadioGroup
+                label="Show Notification"
+                name="notification"
+                options={NOTIFICATION_OPTIONS}
+                value={formData.notificationOption}
+                onChange={(value) => setFormData({ ...formData, notificationOption: value as NotificationOption })}
+              />
             </div>
           )}
         </div>

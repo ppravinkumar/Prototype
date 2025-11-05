@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import ProgressBar from '../components/ProgressBar'
 import styles from './AutonomousDeploymentStatus.module.css'
 
 interface ProgressBreakdown {
@@ -11,25 +10,12 @@ interface ProgressBreakdown {
   failed: number
 }
 
-interface PatchProgressBreakdown {
-  yetToApply: number
-  inProgress: number
-  installed: number
-  failed: number
-}
-
 interface Ring {
   ringName: string
   status: string
-  autonomousStatus: string | null
   targets: number
   progressBreakdown: ProgressBreakdown
   installedPct: number
-  patches: number
-  patchProgressBreakdown: PatchProgressBreakdown
-  patchInstalledPct: number
-  startTime: string | null
-  endTime: string | null
   hint: string
 }
 
@@ -38,13 +24,9 @@ interface Group {
   start: string
   end: string
   status: string
-  autonomousStatus: string | null
   targets: number
   progressBreakdown: ProgressBreakdown
   installedPct: number
-  patches: number
-  patchProgressBreakdown: PatchProgressBreakdown
-  patchInstalledPct: number
   rings: Ring[]
 }
 
@@ -52,7 +34,6 @@ interface StatusData {
   id: string
   name: string
   overallStatus: string
-  autonomousStatus: string | null
   installedPct: number
   latestGroup: { start: string; end: string }
   counts: ProgressBreakdown
@@ -72,6 +53,45 @@ function formatDateTime(dateStr: string): string {
   })
 }
 
+function ProgressComposite({ breakdown, small = false }: { breakdown: ProgressBreakdown; small?: boolean }) {
+  const total = breakdown.yetToApply + breakdown.inProgress + breakdown.installed + breakdown.failed
+
+  if (total === 0) return <div className={small ? styles.progressCompositeSmall : styles.progressComposite} />
+
+  const yetToApplyPct = (breakdown.yetToApply / total) * 100
+  const inProgressPct = (breakdown.inProgress / total) * 100
+  const installedPct = (breakdown.installed / total) * 100
+  const failedPct = (breakdown.failed / total) * 100
+
+  return (
+    <div className={small ? styles.progressCompositeSmall : styles.progressComposite}>
+      {yetToApplyPct > 0 && (
+        <div
+          className={styles.progressSegment}
+          style={{ width: `${yetToApplyPct}%`, backgroundColor: '#6B7280' }}
+        />
+      )}
+      {inProgressPct > 0 && (
+        <div
+          className={styles.progressSegment}
+          style={{ width: `${inProgressPct}%`, backgroundColor: '#3B82F6' }}
+        />
+      )}
+      {installedPct > 0 && (
+        <div
+          className={styles.progressSegment}
+          style={{ width: `${installedPct}%`, backgroundColor: '#22C55E' }}
+        />
+      )}
+      {failedPct > 0 && (
+        <div
+          className={styles.progressSegment}
+          style={{ width: `${failedPct}%`, backgroundColor: '#EF4444' }}
+        />
+      )}
+    </div>
+  )
+}
 
 function StatusBadge({ status }: { status: string }) {
   const getStatusClass = () => {
@@ -132,7 +152,6 @@ function AutonomousDeploymentStatus() {
         .from('autonomous_deployment_group_rings')
         .select('*')
         .in('group_id', groupIds)
-        .order('created_at', { ascending: true })
 
       if (ringsError) throw ringsError
 
@@ -150,65 +169,38 @@ function AutonomousDeploymentStatus() {
         failed: acc.failed + g.failed
       }), { yetToApply: 0, inProgress: 0, installed: 0, failed: 0 })
 
-      const formattedGroups: Group[] = (groups || []).map((g: any) => {
-        const patches = Array.isArray(g.patches) ? g.patches : []
-        return {
-          groupId: g.group_id,
-          start: g.start_date,
-          end: g.end_date,
-          status: g.status,
-          autonomousStatus: g.autonomous_status || null,
-          targets: g.targets,
+      const formattedGroups: Group[] = (groups || []).map((g: any) => ({
+        groupId: g.group_id,
+        start: g.start_date,
+        end: g.end_date,
+        status: g.status,
+        targets: g.targets,
+        progressBreakdown: {
+          yetToApply: g.yet_to_apply,
+          inProgress: g.in_progress,
+          installed: g.installed,
+          failed: g.failed
+        },
+        installedPct: g.installed_pct,
+        rings: (ringsByGroup[g.id] || []).map((r: any) => ({
+          ringName: r.ring_name,
+          status: r.status,
+          targets: r.targets,
           progressBreakdown: {
-            yetToApply: g.yet_to_apply,
-            inProgress: g.in_progress,
-            installed: g.installed,
-            failed: g.failed
+            yetToApply: r.yet_to_apply,
+            inProgress: r.in_progress,
+            installed: r.installed,
+            failed: r.failed
           },
-          installedPct: g.installed_pct,
-          patches: patches.length,
-          patchProgressBreakdown: {
-            yetToApply: g.patch_yet_to_apply || 0,
-            inProgress: g.patch_in_progress || 0,
-            installed: g.patch_installed || 0,
-            failed: g.patch_failed || 0
-          },
-          patchInstalledPct: g.patch_installed_pct || 0,
-          rings: (ringsByGroup[g.id] || []).map((r: any) => {
-            const ringPatches = Array.isArray(r.patches) ? r.patches : []
-            return {
-              ringName: r.ring_name,
-              status: r.status,
-              autonomousStatus: r.autonomous_status || null,
-              targets: r.targets,
-              progressBreakdown: {
-                yetToApply: r.yet_to_apply,
-                inProgress: r.in_progress,
-                installed: r.installed,
-                failed: r.failed
-              },
-              installedPct: r.installed_pct,
-              patches: ringPatches.length,
-              patchProgressBreakdown: {
-                yetToApply: r.patch_yet_to_apply || 0,
-                inProgress: r.patch_in_progress || 0,
-                installed: r.patch_installed || 0,
-                failed: r.patch_failed || 0
-              },
-              patchInstalledPct: r.patch_installed_pct || 0,
-              startTime: r.start_time,
-              endTime: r.end_time,
-              hint: r.hint
-            }
-          })
-        }
-      })
+          installedPct: r.installed_pct,
+          hint: r.hint
+        }))
+      }))
 
       setData({
         id: deployment.id,
         name: deployment.deployment_name,
         overallStatus: deployment.overall_status,
-        autonomousStatus: deployment.autonomous_status || null,
         installedPct: deployment.installed_pct,
         latestGroup: latestGroup ? {
           start: latestGroup.start_date,
@@ -265,10 +257,15 @@ function AutonomousDeploymentStatus() {
       <div className={styles.summaryCard}>
         <div className={styles.summaryGrid}>
           <div className={styles.summaryBlock}>
-            <div className={styles.summaryLabel}>Latest Rollout</div>
+            <div className={styles.summaryLabel}>Latest Group</div>
             <div className={styles.summaryValue}>
               {formatDateTime(data.latestGroup.start)} → {formatDateTime(data.latestGroup.end)}
             </div>
+          </div>
+
+          <div className={styles.summaryBlock}>
+            <div className={styles.summaryLabel}>Installed</div>
+            <div className={styles.summaryValueLarge}>{data.installedPct}%</div>
           </div>
 
           <div className={styles.summaryBlock}>
@@ -296,18 +293,17 @@ function AutonomousDeploymentStatus() {
 
       <div className={styles.tableCard}>
         <div className={styles.tableHeader}>
-          <h2 className={styles.tableTitle}>Rollouts</h2>
+          <h2 className={styles.tableTitle}>Groups</h2>
         </div>
 
         <table className={styles.table}>
           <thead>
             <tr>
-              <th style={{ width: '280px' }}>ROLLOUT (START → END)</th>
-              <th style={{ width: '140px' }}>STATUS</th>
-              <th style={{ width: '90px' }}>TARGETS</th>
-              <th style={{ width: '200px' }}>TARGET PROGRESS</th>
-              <th style={{ width: '90px' }}>PATCHES</th>
-              <th style={{ width: '200px' }}>PATCH PROGRESS</th>
+              <th style={{ width: '320px' }}>GROUP (START → END)</th>
+              <th style={{ width: '160px' }}>STATUS</th>
+              <th style={{ width: '110px' }}>TARGETS</th>
+              <th style={{ width: '260px' }}>PROGRESS</th>
+              <th style={{ width: '120px' }}>INSTALLED %</th>
               <th style={{ width: '60px' }}>RINGS</th>
             </tr>
           </thead>
@@ -318,11 +314,10 @@ function AutonomousDeploymentStatus() {
                 <>
                   <tr key={group.groupId} onClick={() => toggleGroup(group.groupId)}>
                     <td>{formatDateTime(group.start)} → {formatDateTime(group.end)}</td>
-                    <td><StatusBadge status={group.autonomousStatus || group.status} /></td>
+                    <td><StatusBadge status={group.status} /></td>
                     <td>{group.targets}</td>
-                    <td><ProgressBar breakdown={group.progressBreakdown} showLabels /></td>
-                    <td>{group.patches}</td>
-                    <td><ProgressBar breakdown={group.patchProgressBreakdown} showLabels /></td>
+                    <td><ProgressComposite breakdown={group.progressBreakdown} /></td>
+                    <td>{group.installedPct}%</td>
                     <td>
                       <span className={`${styles.chevron} ${isExpanded ? styles.chevronExpanded : ''}`}>
                         ›
@@ -331,33 +326,27 @@ function AutonomousDeploymentStatus() {
                   </tr>
                   {isExpanded && (
                     <tr className={styles.expandedRow}>
-                      <td colSpan={7}>
+                      <td colSpan={6}>
                         <div className={styles.expandedContent}>
                           <table className={styles.innerTable}>
                             <thead>
                               <tr>
-                                <th style={{ width: '140px' }}>RING</th>
-                                <th style={{ width: '110px' }}>STATUS</th>
-                                <th style={{ width: '80px' }}>TARGETS</th>
-                                <th style={{ width: '160px' }}>TARGET PROGRESS</th>
-                                <th style={{ width: '70px' }}>PATCHES</th>
-                                <th style={{ width: '160px' }}>PATCH PROGRESS</th>
-                                <th style={{ width: '140px' }}>START TIME</th>
-                                <th style={{ width: '140px' }}>END TIME</th>
-                                <th style={{ width: '180px' }}>HINT</th>
+                                <th style={{ width: '180px' }}>RING</th>
+                                <th style={{ width: '140px' }}>STATUS</th>
+                                <th style={{ width: '110px' }}>TARGETS</th>
+                                <th style={{ width: '240px' }}>PROGRESS</th>
+                                <th style={{ width: '120px' }}>INSTALLED %</th>
+                                <th style={{ width: '260px' }}>HINT</th>
                               </tr>
                             </thead>
                             <tbody>
                               {group.rings.map((ring, idx) => (
                                 <tr key={idx}>
                                   <td>{ring.ringName}</td>
-                                  <td><StatusBadge status={ring.autonomousStatus || ring.status} /></td>
+                                  <td><StatusBadge status={ring.status} /></td>
                                   <td>{ring.targets}</td>
-                                  <td><ProgressBar breakdown={ring.progressBreakdown} small showLabels /></td>
-                                  <td>{ring.patches}</td>
-                                  <td><ProgressBar breakdown={ring.patchProgressBreakdown} small showLabels /></td>
-                                  <td>{ring.startTime ? formatDateTime(ring.startTime) : '-'}</td>
-                                  <td>{ring.endTime ? formatDateTime(ring.endTime) : '-'}</td>
+                                  <td><ProgressComposite breakdown={ring.progressBreakdown} small /></td>
+                                  <td>{ring.installedPct}%</td>
                                   <td><span className={styles.hintText}>{ring.hint}</span></td>
                                 </tr>
                               ))}
