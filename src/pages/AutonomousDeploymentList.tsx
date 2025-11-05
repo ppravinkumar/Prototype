@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import ProgressBar from '../components/ProgressBar'
 import styles from './AutonomousDeploymentList.module.css'
+
+interface ProgressBreakdown {
+  yetToApply: number
+  inProgress: number
+  installed: number
+  failed: number
+}
 
 interface Deployment {
   id: string
   name: string
-  progressPct: number
+  progressBreakdown: ProgressBreakdown | null
+  autonomousStatus: string | null
   createdBy: string
 }
 
@@ -27,17 +36,43 @@ function AutonomousDeploymentList() {
 
       const { data, error: fetchError } = await supabase
         .from('autonomous_deployments')
-        .select('id, deployment_name, installed_pct, created_by')
+        .select('id, deployment_name, autonomous_status, created_by')
         .order('created_at', { ascending: false })
 
       if (fetchError) throw fetchError
 
-      const formattedDeployments = (data || []).map(d => ({
-        id: d.id,
-        name: d.deployment_name,
-        progressPct: d.installed_pct,
-        createdBy: d.created_by
-      }))
+      const deploymentIds = (data || []).map(d => d.id)
+
+      const { data: groups, error: groupsError } = await supabase
+        .from('autonomous_deployment_groups')
+        .select('deployment_id, yet_to_apply, in_progress, installed, failed, start_date')
+        .in('deployment_id', deploymentIds)
+        .order('start_date', { ascending: false })
+
+      if (groupsError) throw groupsError
+
+      const latestGroupByDeployment = (groups || []).reduce((acc: Record<string, any>, group: any) => {
+        if (!acc[group.deployment_id]) {
+          acc[group.deployment_id] = group
+        }
+        return acc
+      }, {} as Record<string, any>)
+
+      const formattedDeployments = (data || []).map(d => {
+        const latestGroup = latestGroupByDeployment[d.id]
+        return {
+          id: d.id,
+          name: d.deployment_name,
+          progressBreakdown: latestGroup ? {
+            yetToApply: latestGroup.yet_to_apply,
+            inProgress: latestGroup.in_progress,
+            installed: latestGroup.installed,
+            failed: latestGroup.failed
+          } : null,
+          autonomousStatus: d.autonomous_status || null,
+          createdBy: d.created_by
+        }
+      })
 
       setDeployments(formattedDeployments)
     } catch (err) {
@@ -101,7 +136,7 @@ function AutonomousDeploymentList() {
         <thead>
           <tr>
             <th>Deployment Name</th>
-            <th>Status</th>
+            <th>Last Rollout Target Progress</th>
             <th>Created By</th>
           </tr>
         </thead>
@@ -121,15 +156,11 @@ function AutonomousDeploymentList() {
                 </a>
               </td>
               <td className={styles.progressCell}>
-                <div className={styles.progressContainer}>
-                  <div className={styles.progressBar}>
-                    <div
-                      className={styles.progressFill}
-                      style={{ width: `${deployment.progressPct}%` }}
-                    />
-                  </div>
-                  <span className={styles.progressLabel}>{deployment.progressPct}%</span>
-                </div>
+                {deployment.progressBreakdown ? (
+                  <ProgressBar breakdown={deployment.progressBreakdown} showLabels />
+                ) : (
+                  <span className={styles.noData}>No rollout data</span>
+                )}
               </td>
               <td>{deployment.createdBy}</td>
             </tr>
