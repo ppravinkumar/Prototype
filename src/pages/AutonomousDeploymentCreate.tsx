@@ -19,9 +19,6 @@ interface PatchTuesdayEntry {
 }
 
 interface RingData {
-  id: string
-  ringNumber: number
-  name: string
   targets: string[]
   passCriteria?: number
   waitDays?: number
@@ -35,7 +32,9 @@ interface FormData {
   weekDayEntries: WeekDayEntry[]
   patchTuesdayEntries: PatchTuesdayEntry[]
   calendarDay: string
-  rings: RingData[]
+  ring1: RingData
+  ring2: RingData
+  ring3: RingData
 }
 
 interface FormErrors {
@@ -63,19 +62,6 @@ const WEEK_OPTIONS = ['1', '2', '3', '4', 'last']
 const DAY_OPTIONS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const CALENDAR_DAY_OPTIONS = Array.from({ length: 28 }, (_, i) => (i + 1).toString()).concat('last')
 
-function getRingName(ringNumber: number, totalRings: number): string {
-  if (ringNumber === 1) {
-    return 'Ring 1 — Internal users'
-  }
-  if (ringNumber === totalRings) {
-    return `Ring ${ringNumber} — All Users`
-  }
-  if (ringNumber === 2 && totalRings > 2) {
-    return 'Ring 2 — Early adopters'
-  }
-  return `Ring ${ringNumber}`
-}
-
 function AutonomousDeploymentCreate() {
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -89,16 +75,9 @@ function AutonomousDeploymentCreate() {
     weekDayEntries: [],
     patchTuesdayEntries: [],
     calendarDay: '1',
-    rings: [
-      {
-        id: '1',
-        ringNumber: 1,
-        name: 'Ring 1 — Internal users',
-        targets: [],
-        passCriteria: undefined,
-        waitDays: undefined
-      }
-    ]
+    ring1: { targets: [] },
+    ring2: { targets: [] },
+    ring3: { targets: [] }
   })
 
   const [errors, setErrors] = useState<FormErrors>({})
@@ -150,49 +129,6 @@ function AutonomousDeploymentCreate() {
     })
   }
 
-  const addRing = () => {
-    const newRingNumber = formData.rings.length + 1
-    const newId = Date.now().toString()
-    const newRings = [...formData.rings]
-
-    newRings.push({
-      id: newId,
-      ringNumber: newRingNumber,
-      name: getRingName(newRingNumber, newRingNumber),
-      targets: [],
-      passCriteria: undefined,
-      waitDays: undefined
-    })
-
-    const updatedRings = newRings.map((ring, index) => ({
-      ...ring,
-      ringNumber: index + 1,
-      name: getRingName(index + 1, newRings.length)
-    }))
-
-    setFormData({ ...formData, rings: updatedRings })
-  }
-
-  const deleteRing = (ringId: string) => {
-    if (formData.rings.length <= 1) return
-
-    const newRings = formData.rings.filter(r => r.id !== ringId)
-    const updatedRings = newRings.map((ring, index) => ({
-      ...ring,
-      ringNumber: index + 1,
-      name: getRingName(index + 1, newRings.length)
-    }))
-
-    setFormData({ ...formData, rings: updatedRings })
-  }
-
-  const updateRing = (ringId: string, updates: Partial<RingData>) => {
-    const updatedRings = formData.rings.map(ring =>
-      ring.id === ringId ? { ...ring, ...updates } : ring
-    )
-    setFormData({ ...formData, rings: updatedRings })
-  }
-
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {}
 
@@ -212,27 +148,38 @@ function AutonomousDeploymentCreate() {
       newErrors.patchTuesday = 'At least one offset/day entry is required'
     }
 
-    formData.rings.forEach((ring, index) => {
-      if (ring.targets.length === 0) {
-        newErrors[`ring${ring.id}Targets`] = `${ring.name} has no targets`
-      }
+    if (formData.ring1.targets.length === 0) {
+      newErrors.ring1Targets = "Ring 'Internal users' has no targets"
+    }
 
-      const isFinalRing = index === formData.rings.length - 1
-      if (!isFinalRing) {
-        if (!ring.passCriteria || ring.passCriteria < 1 || ring.passCriteria > 100) {
-          newErrors[`ring${ring.id}Pass`] = `Provide ${ring.name} pass criteria % as integer 1-100`
-        }
+    if (formData.ring2.targets.length === 0) {
+      newErrors.ring2Targets = "Ring 'Early adopters' has no targets"
+    }
 
-        if (ring.waitDays === undefined || ring.waitDays < 0) {
-          newErrors[`ring${ring.id}Wait`] = `Provide ${ring.name} wait days as integer ≥ 0`
-        }
-      }
-    })
+    if (formData.ring3.targets.length === 0) {
+      newErrors.ring3Targets = "Ring 'All Users' has no targets"
+    }
 
-    const allTargets = formData.rings.flatMap(ring => ring.targets)
+    const allTargets = [...formData.ring1.targets, ...formData.ring2.targets, ...formData.ring3.targets]
     const duplicates = allTargets.filter((item, index) => allTargets.indexOf(item) !== index)
     if (duplicates.length > 0) {
       newErrors.targetOverlap = 'Targets overlap between rings. Remove duplicates.'
+    }
+
+    if (!formData.ring1.passCriteria || formData.ring1.passCriteria < 1 || formData.ring1.passCriteria > 100) {
+      newErrors.ring1Pass = 'Provide Ring 1 pass criteria % as integer 1-100'
+    }
+
+    if (!formData.ring2.passCriteria || formData.ring2.passCriteria < 1 || formData.ring2.passCriteria > 100) {
+      newErrors.ring2Pass = 'Provide Ring 2 pass criteria % as integer 1-100'
+    }
+
+    if (formData.ring1.waitDays === undefined || formData.ring1.waitDays < 0) {
+      newErrors.ring1Wait = 'Provide Ring 1 wait days as integer ≥ 0'
+    }
+
+    if (formData.ring2.waitDays === undefined || formData.ring2.waitDays < 0) {
+      newErrors.ring2Wait = 'Provide Ring 2 wait days as integer ≥ 0'
     }
 
     setErrors(newErrors)
@@ -472,88 +419,101 @@ function AutonomousDeploymentCreate() {
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>Rings</h3>
           <p className={styles.sectionDescription}>
-            Starting with 1 to N number of rings. Each ring has its own targets. Devices must not appear in more than one ring.
+            Three fixed rings. Each ring has its own targets. Devices must not appear in more than one ring.
           </p>
           {errors.targetOverlap && <div className={styles.errorText}>{errors.targetOverlap}</div>}
 
           <div className={styles.ringsContainer}>
-            {formData.rings.map((ring, index) => {
-              const isFinalRing = index === formData.rings.length - 1
-              const showDeleteButton = formData.rings.length > 1
-              const previousRingName = index > 0 ? formData.rings[index - 1].name : ''
+            <div className={styles.ringCard}>
+              <h4 className={styles.ringHeader}>Ring 1 — Internal users</h4>
+              <MultiSelect
+                label="Targets"
+                options={TARGET_OPTIONS}
+                value={formData.ring1.targets}
+                onChange={(value) => setFormData({ ...formData, ring1: { ...formData.ring1, targets: value } })}
+                error={errors.ring1Targets}
+                required
+                placeholder="Search targets..."
+              />
+              <FormInput
+                label="Pass criteria % (Installed)"
+                type="number"
+                value={formData.ring1.passCriteria?.toString() || ''}
+                onChange={(value) => setFormData({ ...formData, ring1: { ...formData.ring1, passCriteria: parseInt(value) || undefined } })}
+                error={errors.ring1Pass}
+                required
+                placeholder="60"
+              />
+              <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
+                When this ring reaches the pass % Installed, the next ring begins.
+              </p>
+              <FormInput
+                label="Wait days for % calculation"
+                type="number"
+                value={formData.ring1.waitDays?.toString() || ''}
+                onChange={(value) => setFormData({ ...formData, ring1: { ...formData.ring1, waitDays: parseInt(value) || undefined } })}
+                error={errors.ring1Wait}
+                required
+                placeholder="0"
+              />
+              <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
+                We begin evaluating this ring's Installed % N days after it starts. After that, the % counts only devices targeted for at least N days. Once passed, it stays passed (latched).
+              </p>
+              <div className={styles.ringArrow}>→</div>
+            </div>
 
-              return (
-                <div key={ring.id} className={styles.ringCard}>
-                  <div className={styles.ringCardHeader}>
-                    <h4 className={styles.ringHeader}>{ring.name}</h4>
-                    {showDeleteButton && (
-                      <button
-                        type="button"
-                        onClick={() => deleteRing(ring.id)}
-                        className={styles.deleteRingButton}
-                        title="Delete ring"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                  <MultiSelect
-                    label="Targets"
-                    options={TARGET_OPTIONS}
-                    value={ring.targets}
-                    onChange={(value) => updateRing(ring.id, { targets: value })}
-                    error={errors[`ring${ring.id}Targets`]}
-                    required
-                    placeholder="Search targets..."
-                  />
-                  {!isFinalRing && (
-                    <>
-                      <FormInput
-                        label="Pass criteria % (Installed)"
-                        type="number"
-                        value={ring.passCriteria?.toString() || ''}
-                        onChange={(value) => updateRing(ring.id, { passCriteria: parseInt(value) || undefined })}
-                        error={errors[`ring${ring.id}Pass`]}
-                        required
-                        placeholder="60"
-                      />
-                      <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
-                        {index === 0
-                          ? 'When this ring reaches the pass % Installed, the next ring begins.'
-                          : 'Opens when previous ring passes. When this ring reaches the pass %, the next ring begins.'}
-                      </p>
-                      <FormInput
-                        label="Wait days for % calculation"
-                        type="number"
-                        value={ring.waitDays?.toString() || ''}
-                        onChange={(value) => updateRing(ring.id, { waitDays: parseInt(value) || undefined })}
-                        error={errors[`ring${ring.id}Wait`]}
-                        required
-                        placeholder="0"
-                      />
-                      <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
-                        We begin evaluating this ring's Installed % N days after it starts. After that, the % counts only devices targeted for at least N days. Once passed, it stays passed (latched).
-                      </p>
-                    </>
-                  )}
-                  {isFinalRing && (
-                    <p className={styles.ringNote}>
-                      {index === 0 ? 'This is the only ring.' : `Opens when ${previousRingName} passes.`}
-                    </p>
-                  )}
-                  {!isFinalRing && <div className={styles.ringArrow}>→</div>}
-                </div>
-              )
-            })}
+            <div className={styles.ringCard}>
+              <h4 className={styles.ringHeader}>Ring 2 — Early adopters</h4>
+              <MultiSelect
+                label="Targets"
+                options={TARGET_OPTIONS}
+                value={formData.ring2.targets}
+                onChange={(value) => setFormData({ ...formData, ring2: { ...formData.ring2, targets: value } })}
+                error={errors.ring2Targets}
+                required
+                placeholder="Search targets..."
+              />
+              <FormInput
+                label="Pass criteria % (Installed)"
+                type="number"
+                value={formData.ring2.passCriteria?.toString() || ''}
+                onChange={(value) => setFormData({ ...formData, ring2: { ...formData.ring2, passCriteria: parseInt(value) || undefined } })}
+                error={errors.ring2Pass}
+                required
+                placeholder="80"
+              />
+              <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
+                Opens when Internal users passes. When this ring reaches the pass %, the next ring begins.
+              </p>
+              <FormInput
+                label="Wait days for % calculation"
+                type="number"
+                value={formData.ring2.waitDays?.toString() || ''}
+                onChange={(value) => setFormData({ ...formData, ring2: { ...formData.ring2, waitDays: parseInt(value) || undefined } })}
+                error={errors.ring2Wait}
+                required
+                placeholder="0"
+              />
+              <p style={{ fontSize: '13px', color: '#6B7280', margin: '-8px 0 0 0' }}>
+                Same evaluation rule: gate at N days and include only devices targeted for at least N days; latched once passed.
+              </p>
+              <div className={styles.ringArrow}>→</div>
+            </div>
+
+            <div className={styles.ringCard}>
+              <h4 className={styles.ringHeader}>Ring 3 — All Users</h4>
+              <MultiSelect
+                label="Targets"
+                options={TARGET_OPTIONS}
+                value={formData.ring3.targets}
+                onChange={(value) => setFormData({ ...formData, ring3: { ...formData.ring3, targets: value } })}
+                error={errors.ring3Targets}
+                required
+                placeholder="Search targets..."
+              />
+              <p className={styles.ringNote}>Opens when Early adopters passes.</p>
+            </div>
           </div>
-
-          <button
-            type="button"
-            onClick={addRing}
-            className={styles.addRingButton}
-          >
-            + Add Ring
-          </button>
         </div>
 
         {submitError && (
