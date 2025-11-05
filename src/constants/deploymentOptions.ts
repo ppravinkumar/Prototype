@@ -104,3 +104,10 @@ export const NOTIFICATION_OPTIONS: { value: NotificationOption; label: string }[
 ]
 
 export const DDM_PATCH_IDS = ['600209', '600210', '600211']
+
+export type CustomizationMode = 'enable_customisation' | 'follow_policy'
+
+export const CUSTOMIZATION_MODE_OPTIONS: { value: CustomizationMode; label: string }[] = [
+  { value: 'enable_customisation', label: 'Enable Customisation' },
+  { value: 'follow_policy', label: 'Follow Policy With Start Date and Time Selection' }
+]
